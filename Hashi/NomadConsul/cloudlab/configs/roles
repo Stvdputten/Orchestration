@@ -1,0 +1,8 @@
+SERVER_1_IP=ms0840.utah.cloudlab.us
+SERVER_2_IP=ms0833.utah.cloudlab.us
+SERVER_3_IP=ms0810.utah.cloudlab.us
+AGENT_1_IP=ms0813.utah.cloudlab.us
+AGENT_2_IP=ms0831.utah.cloudlab.us
+AGENT_3_IP=ms0830.utah.cloudlab.us
+AGENT_4_IP=ms0843.utah.cloudlab.us
+AGENT_5_IP=ms0803.utah.cloudlab.us
