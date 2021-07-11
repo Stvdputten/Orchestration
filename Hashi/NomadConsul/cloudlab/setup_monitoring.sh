@@ -3,6 +3,13 @@
 ips="configs/ips"
 manager=$(head -n 1 configs/ips)
 
+# TODO setup experiments
+pssh -i -h $ips "git clone --recurse-submodules --single-branch --branch local https://github.com/Stvdputten/DeathStarBench DeathStarBench"
+pssh -i -h $ips "git clone --recurse-submodules https://github.com/Stvdputten/Orchestration"
+pssh -i -h $ips "cd Orchestration/Hashi/NomadConsul/local/ && rmdir DeathStarBench && git clone --recurse-submodules --single-branch --branch local https://github.com/Stvdputten/DeathStarBench DeathStarBench"
+
+# pssh -i -h $ips "cd Orchestration/Hashi/NomadConsul/local/DeathStarBench && git checkout local"
+
 # Setup Promotheus telemetry
 pssh -i -h $ips 'cat << EOF | sudo tee -a /etc/nomad.d/nomad.hcl
 telemetry {
@@ -13,19 +20,18 @@ telemetry {
   publish_node_metrics = true
 } 
 client {
-  host_volume "test" {
-    path = "/users/stvdp/"
+  host_volume "DSB" {
+    path = "/users/stvdp/DeathStarBench"
     read_only = true
   }
-  plugin "docker" {
-    config{
-      volumes {
-        enabled = true
-      }
+}
+plugin "docker" {
+  config{
+    volumes {
+      enabled = true
     }
   }
 }
-
 EOF'
 pssh -i -h $ips "sudo systemctl restart nomad.service"
 

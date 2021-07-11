@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Change the IP addresses
-SERVER_1_IP=ms1004.utah.cloudlab.us
-AGENT_1_IP=ms1025.utah.cloudlab.us
+SERVER_1_IP=ms0901.utah.cloudlab.us
+AGENT_1_IP=ms0906.utah.cloudlab.us
 user="stvdp"
 
 
