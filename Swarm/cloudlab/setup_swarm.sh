@@ -9,9 +9,10 @@ device="eno1"
 # device="enp1s0d1"
 # device="eth0"
 count=1
-while IFS= read -r line; do
+# https://stackoverflow.com/questions/10929453/read-a-file-line-by-line-assigning-the-value-to-a-variable
+while IFS= read -r line || [[ -n "$line" ]]; do
 	echo $count
-	if [[ count -eq 3 ]]; then
+	if [[ count -gt 1  && count -lt 4 ]]; then
 		echo "MANAGER $line"
 		ssh -n -tt $line "$join_manager"
 		# echo "MANAGER $line"
@@ -32,6 +33,6 @@ while IFS= read -r line; do
 		echo "Commands are ready"
 	fi
 	count=$((count + 1))
-done <"$input"
+done < "$input" 
 
 echo "Cluster is setup"
