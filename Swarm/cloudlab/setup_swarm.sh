@@ -4,7 +4,9 @@
 # input="/home/stvdputten/.pssh_hosts_files_cloudlab"
 input="configs/ips"
 # device="enp1s0"
-device="eno1"
+# Make sure correct network interface is being used
+# device="eno1"
+device="ens1f0"
 # localip
 # device="enp1s0d1"
 # device="eth0"
