@@ -3,26 +3,18 @@
 # we follow
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
 # source ./configs/ips
-echo "Kubernetes setup is starting."
 source configs/roles
 ips="configs/ips"
-
-manager=$(head -n 1 configs/ips)
-device="eno1"
-ip_manager=$(ssh -n $manager "ip addr show $device | grep 'inet\b' | awk '{print \$2}' | cut -d/ -f1")
 
 managers=(${!MANAGER_@})
 workers=(${!WORKER_@})
 
-# echo "$ip_manager"
-# echo ${!managers[0]}
-ssh ${!managers[0]} "sudo kubeadm init --control-plane-endpoint='$ip_manager' --apiserver-advertise-address='$ip_manager' --upload-certs --apiserver-cert-extra-sans='$ip_manager' --pod-network-cidr=10.244.0.0/16" > configs/logs.txt
-ssh ${!managers[0]} 'mkdir -p $HOME/.kube && sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config'
-
-exit
 # SETUP first control plane node
+ssh ${!managers[0]} "sudo kubeadm init --control-plane-endpoint='${!managers[0]}' --apiserver-advertise-address='${!managers[0]}' --upload-certs --apiserver-cert-extra-sans='${!managers[0]}' --pod-network-cidr=10.244.0.0/16" > configs/logs.txt
+ssh ${!managers[0]} 'mkdir -p $HOME/.kube && sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config'
 ssh ${!managers[0]} 'kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml'
 # # Untaint the nodes to make it possible to deploy apps on the master nodes
+# # setup k8s for local pc
 
 
 # # kubeadm join 145.100.58.221:6443 --token 3gvp72.t5zc882ufn97rdvm \
@@ -48,11 +40,5 @@ do
     # indirect parameter expansion
     ssh -n "${!worker}" "sudo $join" 
 done
-
-# https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/ 
-# setup k8s access on local machine
-scp $manager:'$HOME/.kube/config' "$HOME/.kube/cloudlab_config_k8"
-export KUBECONFIG="$HOME/.kube/config" 
-export KUBECONFIG="$HOME/.kube/cloudlab_config_k8:$KUBECONFIG"
 
 echo "Kubernetes setup is done."

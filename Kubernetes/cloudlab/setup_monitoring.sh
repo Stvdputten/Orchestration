@@ -2,6 +2,8 @@
 
 ips="configs/ips"
 manager="$(head -n 1 'configs/ips')"
+managers=(${!MANAGER_@})
+
 
 # Helm install
 ssh -n $manager "curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3"
@@ -23,10 +25,16 @@ helm install kube-prom-stack prometheus-community/kube-prometheus-stack -n monit
 # get secrets of grafana of prometheus
 kubectl get secrets kube-prom-stack-grafana -o yaml -n monitoring
 kubectl get secrets kube-prom-stack-kube-prome-admission -n monitoring
-echo passwd | base64 -d 
+# echo passwd | base64 -d 
+
+# dashboard
+kubectl apply -f configs/dashboard-adminuser.yaml
 
 # portforward 
-kubectl port-forward pod/kube-prom-stack-grafana-f4d68fb76-g8t79 3000:3000
+# kubectl port-forward pod/kube-prom-stack-grafana-6487b679b 3000:3000
+pod_name=kubectl get pods  -n monitoring | grep "grafana" | awk '{ print $1 }'
+kubectl port-forward -n monitoring $pod_name 3000:3000
+
 
 # # Make sure prometheus isn't installed in home directory
 # pssh -i -h $ips "rm -rf prometheus"

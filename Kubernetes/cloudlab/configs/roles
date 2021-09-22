@@ -1,8 +1,8 @@
-MANAGER_1=stvdp@ms0822.utah.cloudlab.us
-MANAGER_2=stvdp@ms0802.utah.cloudlab.us
-MANAGER_3=stvdp@ms0830.utah.cloudlab.us
-WORKER_1=stvdp@ms0813.utah.cloudlab.us
-WORKER_2=stvdp@ms0816.utah.cloudlab.us
-WORKER_3=stvdp@ms0831.utah.cloudlab.us
-WORKER_4=stvdp@ms0808.utah.cloudlab.us
-WORKER_5=stvdp@ms0806.utah.cloudlab.us
+MANAGER_1=stvdp@ms0810.utah.cloudlab.us
+MANAGER_2=stvdp@ms0813.utah.cloudlab.us
+MANAGER_3=stvdp@ms0824.utah.cloudlab.us
+WORKER_1=stvdp@ms1040.utah.cloudlab.us
+WORKER_2=stvdp@ms0905.utah.cloudlab.us
+WORKER_3=stvdp@ms0904.utah.cloudlab.us
+WORKER_4=stvdp@ms1043.utah.cloudlab.us
+WORKER_5=stvdp@ms1001.utah.cloudlab.us
