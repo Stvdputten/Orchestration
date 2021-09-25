@@ -57,6 +57,10 @@ EOF'
 pssh -i -h $ips "sudo systemctl enable docker"
 pssh -i -h $ips "sudo systemctl daemon-reload"
 pssh -i -h $ips "sudo systemctl restart docker"
+
+# Disable ufw
+pssh -i -h $ips "sudo ufw disable"
+
 # Consul
 pssh -i -h $ips "sudo ufw allow 8300,8301,8302,8500,8600/udp"
 pssh -i -h $ips "sudo ufw allow 8300,8301,8302,8500,8600/tcp"
@@ -70,6 +74,7 @@ pssh -i -h $ips "sudo ufw allow 4646,4647,4648/tcp"
 pssh -i -h $ips "curl -L -o cni-plugins.tgz 'https://github.com/containernetworking/plugins/releases/download/v0.9.0/cni-plugins-linux-$( [ $(uname -m) = aarch64 ] && echo arm64 || echo amd64)'-v0.9.0.tgz"
 pssh -i -h $ips "sudo mkdir -p /opt/cni/bin"
 pssh -i -h $ips "sudo tar -C /opt/cni/bin -xzf cni-plugins.tgz"
+
 
 # Setup Promotheus telemetry
 # pssh -i -h $ips "cat telemetry | sudo tee -a /etc/nomad.d/nomad.hcl"
