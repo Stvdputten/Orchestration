@@ -12,13 +12,16 @@ pssh -i -h $ips "hashi-up version"
 
 # dpkg lock should done, so all should end with exit code 1
 # https://www.edureka.co/community/42504/error-dpkg-frontend-is-locked-by-another-process
-echo "Ensuring all dpkg are not locked, may take a while. Grab a coffee!"
-pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend" | grep "SUCCESS"
-while [ ! $? -eq 1 ]; do
-  echo "Waiting for front lock to be lifted"
-  sleep 10
-  pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend" | grep "SUCCESS" 
-done
+# echo "Ensuring all dpkg are not locked, may take a while. Grab a coffee!"
+# pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend" | grep "SUCCESS"
+# while [ ! $? -eq 1 ]; do
+#   echo "Waiting for front lock to be lifted"
+#   sleep 10
+#   pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend" | grep "SUCCESS" 
+# done
+
+# Disable ufw
+pssh -i -h $ips "sudo ufw disable"
 
 pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y lsb-release vim git apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop"
 pssh -i -h $ips "sudo sh get-docker.sh > /dev/null 2&1"
@@ -60,6 +63,7 @@ pssh -i -h $ips "sudo systemctl restart docker"
 pssh -i -h $ips 'sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
 pssh -i -h $ips 'sudo chmod +x /usr/local/bin/docker-compose'
 
+
 # Consul
 pssh -i -h $ips "sudo ufw allow 8300,8301,8302,8500,8600/udp"
 pssh -i -h $ips "sudo ufw allow 8300,8301,8302,8500,8600/tcp"
@@ -74,4 +78,7 @@ pssh -i -h $ips "curl -L -o cni-plugins.tgz 'https://github.com/containernetwork
 pssh -i -h $ips "sudo mkdir -p /opt/cni/bin"
 pssh -i -h $ips "sudo tar -C /opt/cni/bin -xzf cni-plugins.tgz"
 
+pssh -i -h $ips "echo 1 > /proc/sys/net/bridge/bridge-nf-call-arptables"
+pssh -i -h $ips "echo 1 > /proc/sys/net/bridge/bridge-nf-call-ip6tables"
+pssh -i -h $ips "echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables"
 echo "Configurations done"

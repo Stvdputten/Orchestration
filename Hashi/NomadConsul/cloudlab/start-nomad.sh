@@ -4,6 +4,10 @@ source configs/roles
 user="stvdp"
 agents=(${!AGENT_@})
 
+SERVER_1_IP=$(echo "$SERVER_1_IP" | cut -d'@' -f 2)
+SERVER_2_IP=$(echo "$SERVER_2_IP" | cut -d'@' -f 2)
+SERVER_3_IP=$(echo "$SERVER_3_IP" | cut -d'@' -f 2)
+
 hashi-up nomad install \
   --ssh-target-addr $SERVER_1_IP \
   --ssh-target-user $user \
@@ -32,7 +36,7 @@ hashi-up nomad install \
 echo "Setup workers"
 for agent in ${agents[@]}; do
   hashi-up nomad install \
-    --ssh-target-addr ${!agent} \
+    --ssh-target-addr  $(echo ${!agent} | cut -d'@' -f 2 ) \
     --ssh-target-user $user \
     --client \
     --advertise '{{ GetInterfaceIP "eno1"}}'

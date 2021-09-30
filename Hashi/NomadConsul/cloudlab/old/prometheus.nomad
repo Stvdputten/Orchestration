@@ -28,7 +28,7 @@ scrape_configs:
   - job_name: 'self'
     consul_sd_configs:
 #     Important to update the server to node0 address 
-      - server: 'node0.stvdp-moni.sched-serv-pg0.utah.cloudlab.us:8500'
+      - server: 'node0.stvdp.sched-serv-pg0.utah.cloudlab.us:8500'
 #       - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
 #      - server: '{{ env "attr.unique.network.ip-address" }}:8500'
 
@@ -59,7 +59,7 @@ scrape_configs:
 
     consul_sd_configs:
 #     Important to update the server to node0 address 
-      - server: 'node0.stvdp-moni.sched-serv-pg0.utah.cloudlab.us:8500'
+      - server: 'node0.stvdp.sched-serv-pg0.utah.cloudlab.us:8500'
         services: ['nomad-client', 'nomad']
 
     relabel_configs:    

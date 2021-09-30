@@ -40,7 +40,7 @@ datasources:
   - name: Prometheus
     type: prometheus
     access: proxy
-    url: http://node1.stvdp-moni.sched-serv-pg0.utah.cloudlab.us:9090
+    url: http://node1.stvdp.sched-serv-pg0.utah.cloudlab.us:9090
     jsonData:
       exemplarTraceIdDestinations:
       - name: traceID

@@ -40,6 +40,7 @@ scp prometheus.nomad "$manager:~"
 scp grafana.nomad "$manager:~"
 ssh $manager "nomad job run prometheus.nomad"
 ssh $manager "nomad job run grafana.nomad"
+ssh $manager "cd DeathStarBench/socialNetwork/nomad && nomad job run social-network.nomad"
 
 # count=1
 # while IFS= read -r line; do

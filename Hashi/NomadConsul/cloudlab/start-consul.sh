@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 
+ips=configs/ips
 source configs/roles
+
 user="stvdp"
 agents=(${!AGENT_@})
 
+SERVER_1_IP=$(echo "$SERVER_1_IP" | cut -d'@' -f 2)
+SERVER_2_IP=$(echo "$SERVER_2_IP" | cut -d'@' -f 2)
+SERVER_3_IP=$(echo "$SERVER_3_IP" | cut -d'@' -f 2)
 
 echo "Setup control-plane"
 hashi-up consul install \
@@ -43,7 +48,7 @@ hashi-up consul install \
 echo "Setup workers"
 for agent in ${agents[@]}; do
   hashi-up consul install \
-    --ssh-target-addr ${!agent} \
+    --ssh-target-addr  $(echo ${!agent} | cut -d'@' -f 2 ) \
     --ssh-target-user $user \
     --connect \
     --retry-join $SERVER_1_IP --retry-join $SERVER_2_IP --retry-join $SERVER_3_IP \
@@ -51,11 +56,3 @@ for agent in ${agents[@]}; do
     # --advertise-addr '{{ GetInterfaceIP "eth0"}}'
 done
 
-
-# hashi-up consul install \
-#   --ssh-target-addr $AGENT_2_IP \
-#   --ssh-target-user $user \
-#   --connect \
-#   --retry-join $SERVER_1_IP --retry-join $SERVER_2_IP --retry-join $SERVER_3_IP \
-#   --bind-addr '{{ GetInterfaceIP "eth0"}}'
-#   # --advertise-addr '{{ GetInterfaceIP "eth0"}}'
