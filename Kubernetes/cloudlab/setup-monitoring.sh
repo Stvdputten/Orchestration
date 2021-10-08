@@ -32,8 +32,9 @@ kubectl apply -f configs/dashboard-adminuser.yaml
 
 # portforward 
 # kubectl port-forward pod/kube-prom-stack-grafana-6487b679b 3000:3000
-pod_name=kubectl get pods  -n monitoring | grep "grafana" | awk '{ print $1 }'
-kubectl port-forward -n monitoring $pod_name 3000:3000
+pod_name_gf=kubectl get pods  -n monitoring | grep "grafana" | awk '{ print $1 }'
+pod_name_prom=kubectl get pods  -n monitoring | grep "prome-prometheus" | awk '{ print $1 }'
+kubectl port-forward -n monitoring $pod_name_gf 3000:3000 & kubectl port-forward -n monitoring $pod_name_prom 9090:9090 
 
 
 # # Make sure prometheus isn't installed in home directory

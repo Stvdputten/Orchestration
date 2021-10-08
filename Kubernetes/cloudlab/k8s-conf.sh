@@ -6,6 +6,7 @@
 source configs/roles
 ips="configs/ips"
 
+echo "Kubernetes configuration is starting."
 # kubeadm_version="1.20.7-00"
 # kubelet_version="1.20.7-00"
 # kubectl_version="1.20.7-00"

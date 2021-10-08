@@ -19,7 +19,6 @@ workers=(${!WORKER_@})
 ssh ${!managers[0]} "sudo kubeadm init --control-plane-endpoint='$ip_manager' --apiserver-advertise-address='$ip_manager' --upload-certs --apiserver-cert-extra-sans='$ip_manager' --pod-network-cidr=10.244.0.0/16" > configs/logs.txt
 ssh ${!managers[0]} 'mkdir -p $HOME/.kube && sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config'
 
-exit
 # SETUP first control plane node
 ssh ${!managers[0]} 'kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml'
 # # Untaint the nodes to make it possible to deploy apps on the master nodes
@@ -49,10 +48,11 @@ do
     ssh -n "${!worker}" "sudo $join" 
 done
 
+echo "Copy Kubernetes configs"
 # https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/ 
 # setup k8s access on local machine
-scp $manager:'$HOME/.kube/config' "$HOME/.kube/cloudlab_config_k8"
-export KUBECONFIG="$HOME/.kube/config" 
-export KUBECONFIG="$HOME/.kube/cloudlab_config_k8:$KUBECONFIG"
+# scp stvdp$manager:'$HOME/.kube/config' "$HOME/.kube/cloudlab_config_k8"
+# export KUBECONFIG="$HOME/.kube/config" 
+# export KUBECONFIG="$HOME/.kube/cloudlab_config_k8:$KUBECONFIG"
 
 echo "Kubernetes setup is done."

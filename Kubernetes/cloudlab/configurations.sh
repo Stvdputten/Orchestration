@@ -8,13 +8,13 @@ pssh -i -h $ips "curl -fsSL https://get.docker.com -o get-docker.sh"
 
 # dpkg lock should done, so all should end with exit code 1
 # https://www.edureka.co/community/42504/error-dpkg-frontend-is-locked-by-another-process
-# echo "Ensuring all dpkg are not locked, may take a while. Grab a coffee!"
-# pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend" | grep "SUCCESS"
-# while [ ! $? -eq 1 ]; do
-#   echo "Waiting for front lock to be lifted"
-#   sleep 10
-#   pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend" | grep "SUCCESS" 
-# done
+echo "Ensuring all dpkg are not locked, may take a while. Grab a coffee!"
+pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo 'SUCCESS'"
+while [ ! $? -eq 0 ]; do
+  echo "Waiting for front lock to be lifted"
+  sleep 10
+  pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | grep SUCCESS" 
+done
 
 pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y vim git vim git apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop"
 pssh -i -h $ips "sudo sh get-docker.sh > /dev/null 2&1"
@@ -27,6 +27,9 @@ pssh -i -h $ips "docker --version"
 # Swarm
 pssh -i -h $ips "sudo ufw allow 7946/udp"
 pssh -i -h $ips "sudo ufw allow 2377,7946,4789/tcp"
+
+# Disable ufw
+pssh -i -h $ips "sudo ufw disable"
 
 # prometheus, 8000 is the changed value of cadvisor
 pssh -i -h $ips "sudo ufw allow 9323,3000,9090,8080,8000,9100,9323/tcp"
