@@ -2,7 +2,6 @@
 
 # ips="$HOME/.pssh_hosts_files"
 ips="configs/ips"
-username="stvdp"
 
 # dpkg lock should done, so all should end with exit code 1
 # https://www.edureka.co/community/42504/error-dpkg-frontend-is-locked-by-another-process
@@ -36,7 +35,7 @@ pssh -i -h $ips "sudo apt-get update -y"
 pssh -i -h $ips "sudo apt-get install -y docker-ce docker-ce-cli containerd.io "
 
 # Configure Docker to be run as the user
-pssh -i -h $ips "sudo usermod -aG docker $username"
+pssh -i -h $ips 'sudo usermod -aG docker $USER'
 pssh -i -h $ips "sudo docker --version"
 
 pssh -i -h $ips 'sudo rm /etc/docker/daemon.json'

@@ -42,7 +42,7 @@ pssh -i -h $ips "sudo docker run -d \
     --volume=/sys:/sys:ro \
     --volume=/var/lib/docker/:/var/lib/docker:ro \
     --volume=/dev/disk/:/dev/disk:ro \
-    --publish=8080:8080 \
+    --publish=8085:8080 \
     --detach=true \
     --name=cadvisor \
     --privileged \
@@ -50,7 +50,7 @@ pssh -i -h $ips "sudo docker run -d \
     gcr.io/cadvisor/cadvisor:latest"
 
 # deploy job monitoring.nomad
-scp "./configs/monitoring.nomad" "$manager:/users/$user/" 
+scp "./configs/monitoring.nomad" "$manager:/users/$user/"
 # choose the first client node as the prometheus server
 prometheus_hostname=$(ssh -n $manager 'head -n 1 /etc/hosts ' | awk '{ print $4 }' | sed 's/localhost/node3/') 
 ssh -n $manager "nomad job run -var='consul_ip=$ip_manager' -var='consul_name=consul_server' -var='prometheus_hostname=$prometheus_hostname' monitoring.nomad"

@@ -107,7 +107,7 @@ scrape_configs:
       separator:     ':'
       regex:         '(.*):(4646|4647|4648)'
       target_label:  '__address__'
-      replacement:   '$1:8080'
+      replacement:   '$1:8085'
 
     scrape_interval: 5s    
     metrics_path: /metrics    

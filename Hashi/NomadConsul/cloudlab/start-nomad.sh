@@ -41,4 +41,15 @@ for agent in ${agents[@]}; do
     --client \
     --advertise '{{ GetInterfaceIP "eno1"}}'
     # --advertise-addr '{{ GetInterfaceIP "eth0"}}'
+
+# enable docker volumes
+# https://stackoverflow.com/questions/18660798/here-document-gives-unexpected-end-of-file-error no spaces before eof
+ssh -n ${!agent} 'cat << EOF | sudo tee -a /etc/nomad.d/nomad.hcl 
+client {
+  options = {
+    "docker.volumes.enabled" = "true"
+  }
+} 
+EOF' > /dev/null
+ssh -n ${!agent} 'sudo systemctl restart nomad.service'
 done
