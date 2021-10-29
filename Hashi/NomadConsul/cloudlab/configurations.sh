@@ -81,6 +81,15 @@ pssh -i -h $ips 'sudo chmod +x /usr/local/bin/docker-compose'
 
 # configuration for CNI
 # https://www.nomadproject.io/docs/integrations/consul-connect
-pssh -i -h $ips "curl -L -o cni-plugins.tgz 'https://github.com/containernetworking/plugins/releases/download/v0.9.0/cni-plugins-linux-$( [ $(uname -m) = aarch64 ] && echo arm64 || echo amd64)'-v0.9.0.tgz"
+pssh -i -h $ips "curl -L -o cni-plugins.tgz 'https://github.com/containernetworking/plugins/releases/download/v1.0.1/cni-plugins-linux-$( [ $(uname -m) = aarch64 ] && echo arm64 || echo amd64)'-v1.0.1.tgz"
 pssh -i -h $ips "sudo mkdir -p /opt/cni/bin"
 pssh -i -h $ips "sudo tar -C /opt/cni/bin -xzf cni-plugins.tgz"
+
+#  bridge network to be routed via iptables
+pssh -i -h $ips "echo 1 | sudo tee /proc/sys/net/bridge/bridge-nf-call-arptables"
+pssh -i -h $ips "echo 1 | sudo tee /proc/sys/net/bridge/bridge-nf-call-ip6tables"
+pssh -i -h $ips "echo 1 | sudo tee /proc/sys/net/bridge/bridge-nf-call-iptables"
+
+# setup dnsmasq https://computingforgeeks.com/install-and-configure-dnsmasq-on-ubuntu/
+# sudo systemctl disable systemd-resolved
+# sudo systemctl stop systemd-resolved
