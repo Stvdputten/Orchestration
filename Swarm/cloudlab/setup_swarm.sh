@@ -4,12 +4,13 @@
 # input="/home/stvdputten/.pssh_hosts_files_cloudlab"
 input="configs/ips"
 # device="enp1s0"
+manager=$(head -n 1 configs/ips)
+# echo $manager
+
 # Make sure correct network interface is being used
-# device="eno1"
-device="ens1f0"
-# localip
-# device="enp1s0d1"
-# device="eth0"
+device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | cut -d: -f1")
+# echo $device
+
 count=1
 # https://stackoverflow.com/questions/10929453/read-a-file-line-by-line-assigning-the-value-to-a-variable
 while IFS= read -r line || [[ -n "$line" ]]; do
