@@ -8,10 +8,13 @@ SERVER_1_IP=$(echo "$SERVER_1_IP" | cut -d'@' -f 2)
 SERVER_2_IP=$(echo "$SERVER_2_IP" | cut -d'@' -f 2)
 SERVER_3_IP=$(echo "$SERVER_3_IP" | cut -d'@' -f 2)
 
+version="1.1.6"
+
 hashi-up nomad install \
   --ssh-target-addr $SERVER_1_IP \
   --ssh-target-user $user \
   --server \
+  --version $version \
   --bootstrap-expect 3 \
   --advertise '{{ GetInterfaceIP "eno1"}}'
   # --address '{{ GetInterfaceIP "eth0"}}'
@@ -20,6 +23,7 @@ hashi-up nomad install \
   --ssh-target-addr $SERVER_2_IP \
   --ssh-target-user $user \
   --server \
+  --version $version \
   --bootstrap-expect 3 \
   --advertise '{{ GetInterfaceIP "eno1"}}'
   # --address '{{ GetInterfaceIP "eth0"}}'
@@ -28,6 +32,7 @@ hashi-up nomad install \
   --ssh-target-addr $SERVER_3_IP \
   --ssh-target-user $user \
   --server \
+  --version $version \
   --bootstrap-expect 3 \
   --advertise '{{ GetInterfaceIP "eno1"}}'
   # --address '{{ GetInterfaceIP "eth0"}}'
@@ -38,6 +43,7 @@ for agent in ${agents[@]}; do
   hashi-up nomad install \
     --ssh-target-addr  $(echo ${!agent} | cut -d'@' -f 2 ) \
     --ssh-target-user $user \
+    --version $version \
     --client \
     --advertise '{{ GetInterfaceIP "eno1"}}'
     # --advertise-addr '{{ GetInterfaceIP "eth0"}}'
