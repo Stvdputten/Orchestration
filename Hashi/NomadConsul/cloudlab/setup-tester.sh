@@ -37,22 +37,6 @@ ssh -n $remote "sudo ufw disable"
 # ssh -n $remote 'sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
 # ssh -n $remote 'sudo chmod +x /usr/local/bin/docker-compose'
 
-# Install kubectl 
-# https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-other-package-management
-# ssh -n "$remote" "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common"
-# wait
-# ssh -n "$remote" "sudo rm /etc/apt/sources.list.d/kubernetes.list" 
-# wait
-# ssh -n "$remote" "sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg"
-# wait
-# ssh -n "$remote" 'echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list'
-# wait
-# ssh -n "$remote" "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y kubectl"
-# wait
-# ssh -n "$remote" "sudo apt-mark hold kubectl"
-# wait
-# ssh -n "$remote" "kubectl version --client"
-
 # Get directory for experiments 
 ssh -n $remote "sudo git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench" 
 
