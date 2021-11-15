@@ -32,12 +32,12 @@ workers=(${!WORKER_@})
 
 # # required ports
 # # control planes nodes
-pssh -i -h $ips "sudo ufw allow 6443,2379,2380,10250,10251,10252,10255/tcp"
-pssh -i -h $ips "sudo ufw reload"
+# pssh -i -h $ips "sudo ufw allow 6443,2379,2380,10250,10251,10252,10255/tcp"
+# pssh -i -h $ips "sudo ufw reload"
 
 # # worker nodes
-pssh -i -h $ips "sudo ufw allow 10250,10251,10255/tcp"
-pssh -i -h $ips "sudo ufw allow 30000:32767/tcp"
+# pssh -i -h $ips "sudo ufw allow 10250,10251,10255/tcp"
+# pssh -i -h $ips "sudo ufw allow 30000:32767/tcp"
 
 #  SETUP KUBERNETES
 ips="configs/ips"

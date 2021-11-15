@@ -3,8 +3,6 @@
 ips="configs/ips"
 
 echo "Docker Install Beginning..."
-pssh -i -h $ips "curl -fsSL https://get.docker.com -o get-docker.sh"
-
 
 # dpkg lock should done, so all should end with exit code 1
 # https://www.edureka.co/community/42504/error-dpkg-frontend-is-locked-by-another-process
@@ -13,29 +11,39 @@ pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo 'SUCCESS'"
 while [ ! $? -eq 0 ]; do
   echo "Waiting for front lock to be lifted"
   sleep 10
-  pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | grep SUCCESS" 
+  pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo SUCCESS" 
 done
 
-pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y vim git vim git apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop"
-pssh -i -h $ips "sudo sh get-docker.sh > /dev/null 2&1"
+# Install docker
+pssh -i -h $ips "curl -fsSL https://get.docker.com -o get-docker.sh"
+pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop"
+# pssh -i -h $ips "VERSION=20.10 && sudo sh get-docker.sh > /dev/null 2&1"
 
 # Configure Docker to run as the user
-pssh -i -h $ips 'sudo usermod -aG docker $USER'
+# pssh -i -h $ips 'sudo usermod -aG docker $USER'
 pssh -i -h $ips "docker --version"
+while [ ! $? -eq  0 ]; do
+  echo "Waiting for docker to be installed"
+  pssh -i -h $ips "VERSION=20.10 && sudo sh get-docker.sh > /dev/null 2&1"
+  pssh -i -h $ips 'sudo usermod -aG docker $USER'
+  pssh -i -h $ips "docker --version"
+done
 
-# https://docs.docker.com/engine/swarm/swarm-tutorial/
-# Swarm
-pssh -i -h $ips "sudo ufw allow 7946/udp"
-pssh -i -h $ips "sudo ufw allow 2377,7946,4789/tcp"
-
+echo "Disable ufw"
 # Disable ufw
 pssh -i -h $ips "sudo ufw disable"
 
+# https://docs.docker.com/engine/swarm/swarm-tutorial/
+# Swarm
+# pssh -i -h $ips "sudo ufw allow 7946/udp"
+# pssh -i -h $ips "sudo ufw allow 2377,7946,4789/tcp"
+
 # prometheus, 8000 is the changed value of cadvisor
-pssh -i -h $ips "sudo ufw allow 9323,3000,9090,8080,8000,9100,9323/tcp"
-pssh -i -h $ips "sudo ufw allow 9323,3000,9090,8080,8000,9100,9323/udp"
+# pssh -i -h $ips "sudo ufw allow 9323,3000,9090,8080,8000,9100,9323/tcp"
+# pssh -i -h $ips "sudo ufw allow 9323,3000,9090,8080,8000,9100,9323/udp"
 
 # Ensure daemon.json
+echo "Ensure daemon.json"
 pssh -i -h $ips 'sudo rm /etc/docker/daemon.json'
 pssh -i -h $ips "sudo mkdir -p /etc/systemd/system/docker.service.d"
 pssh -i -h $ips 'cat << EOF | sudo tee /etc/docker/daemon.json  
@@ -51,12 +59,14 @@ pssh -i -h $ips 'cat << EOF | sudo tee /etc/docker/daemon.json
 }
 EOF'
 
+# Enable docker service
+echo "Ensure systemctl"
 pssh -i -h $ips "sudo systemctl enable docker"
 pssh -i -h $ips "sudo systemctl daemon-reload"
 pssh -i -h $ips "sudo systemctl restart docker"
 
 # docker-compose for hotel
-pssh -i -h $ips 'sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
-pssh -i -h $ips 'sudo chmod +x /usr/local/bin/docker-compose'
+# pssh -i -h $ips 'sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
+# pssh -i -h $ips 'sudo chmod +x /usr/local/bin/docker-compose'
 
 echo "Configurations done"

@@ -8,7 +8,8 @@ source configs/roles
 ips="configs/ips"
 
 manager=$(head -n 1 configs/ips)
-device="eno1"
+# device="eno1"
+device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | head -n 1 | cut -d: -f1")
 ip_manager=$(ssh -n $manager "ip addr show $device | grep 'inet\b' | awk '{print \$2}' | cut -d/ -f1")
 
 managers=(${!MANAGER_@})
@@ -48,10 +49,10 @@ do
     ssh -n "${!worker}" "sudo $join" 
 done
 
-echo "Copy Kubernetes configs"
+# echo "Copy Kubernetes configs"
 # https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/ 
 # setup k8s access on local machine
-# scp stvdp$manager:'$HOME/.kube/config' "$HOME/.kube/cloudlab_config_k8"
+# scp $manager:'$HOME/.kube/config' "$HOME/.kube/cloudlab_config_k8"
 # export KUBECONFIG="$HOME/.kube/config" 
 # export KUBECONFIG="$HOME/.kube/cloudlab_config_k8:$KUBECONFIG"
 
