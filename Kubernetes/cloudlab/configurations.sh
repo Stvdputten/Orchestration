@@ -3,26 +3,31 @@
 ips="configs/ips"
 
 echo "Docker Install Beginning..."
-
 # dpkg lock should done, so all should end with exit code 1
 # https://www.edureka.co/community/42504/error-dpkg-frontend-is-locked-by-another-process
 echo "Ensuring all dpkg are not locked, may take a while. Grab a coffee!"
 pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo 'SUCCESS'"
-while [ ! $? -eq 0 ]; do
+while [ $? -ne 0 ]; do
   echo "Waiting for front lock to be lifted"
   sleep 10
-  pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo SUCCESS" 
+  pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo 'SUCCESS'" 
 done
+
+echo "Ensure bash is used as remote shell"
+pssh -i -h $ips 'sudo chsh -s /bin/bash $USER'
 
 # Install docker
 pssh -i -h $ips "curl -fsSL https://get.docker.com -o get-docker.sh"
+pssh -i -h $ips "test -f 'get-docker.sh'"
+while [ ! $? -eq  0 ]; do
+  pssh -i -h $ips "curl -fsSL https://get.docker.com -o get-docker.sh"
+  pssh -i -h $ips "test -f 'get-docker.sh'"
+done
 pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop"
-# pssh -i -h $ips "VERSION=20.10 && sudo sh get-docker.sh > /dev/null 2&1"
 
 # Configure Docker to run as the user
-# pssh -i -h $ips 'sudo usermod -aG docker $USER'
 pssh -i -h $ips "docker --version"
-while [ ! $? -eq  0 ]; do
+while [ $? -ne  0 ]; do
   echo "Waiting for docker to be installed"
   pssh -i -h $ips "VERSION=20.10 && sudo sh get-docker.sh > /dev/null 2&1"
   pssh -i -h $ips 'sudo usermod -aG docker $USER'
@@ -46,7 +51,8 @@ pssh -i -h $ips "sudo ufw disable"
 echo "Ensure daemon.json"
 pssh -i -h $ips 'sudo rm /etc/docker/daemon.json'
 pssh -i -h $ips "sudo mkdir -p /etc/systemd/system/docker.service.d"
-pssh -i -h $ips 'cat << EOF | sudo tee /etc/docker/daemon.json  
+# pssh -i -h $ips 'cat << EOF | sudo tee /etc/docker/daemon.json  
+pssh -i -h $ips 'sudo tee /etc/docker/daemon.json  << EOF
 {
   "exec-opts": ["native.cgroupdriver=systemd"],
   "log-driver": "json-file",
@@ -68,5 +74,8 @@ pssh -i -h $ips "sudo systemctl restart docker"
 # docker-compose for hotel
 # pssh -i -h $ips 'sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
 # pssh -i -h $ips 'sudo chmod +x /usr/local/bin/docker-compose'
+
+# Have the directories for DSB
+pssh -i -h $ips "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
 
 echo "Configurations done"

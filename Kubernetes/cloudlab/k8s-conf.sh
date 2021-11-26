@@ -10,6 +10,7 @@ echo "Kubernetes configuration is starting."
 # kubeadm_version="1.20.7-00"
 # kubelet_version="1.20.7-00"
 # kubectl_version="1.20.7-00"
+pssh -i -h $ips 'sudo chsh -s /bin/bash $USER'
 
 
 managers=(${!MANAGER_@})
@@ -45,23 +46,35 @@ ips="configs/ips"
 # # install kubeadm/kubelet/kubectl
 # https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-other-package-management
 pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common"
-wait
-pssh -i -h $ips "sudo rm /etc/apt/sources.list.d/kubernetes.list"
-wait
-pssh -i -h $ips "sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg"
-wait
-pssh -i -h $ips 'echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list'
-
-# pssh -i -h $ips "sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg"
-# wait
-# pssh -i -h $ips "echo 'deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main' | sudo tee /etc/apt/sources.list.d/kubernetes.list"
-# wait
-pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y kubelet kubeadm kubectl"
-wait
-pssh -i -h $ips "sudo apt-mark hold kubelet kubeadm kubectl"
-wait
 # # check
 pssh -i -h $ips "kubectl version --client && kubeadm version"
+while [ $? -ne 0 ]; do
+    echo "Kubernetes installation failed."
+
+    if  ! pssh -i -h $ips "test -f /etc/apt/sources.list.d/kubernetes.list"; then
+        pssh -i -h $ips "sudo rm /etc/apt/sources.list.d/kubernetes.list"
+    fi
+    wait
+    pssh -i -h $ips "sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+    wait
+    pssh -i -h $ips 'echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list'
+
+    # pssh -i -h $ips "sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+    # wait
+    # pssh -i -h $ips "echo 'deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main' | sudo tee /etc/apt/sources.list.d/kubernetes.list"
+    # wait
+    pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y kubelet kubeadm kubectl"
+    wait
+    pssh -i -h $ips "sudo apt-mark hold kubelet kubeadm kubectl"
+    wait
+    pssh -i -h $ips "kubectl version --client && kubeadm version"
+done
+
+pssh -i -h $ips "kubectl version --client && kubeadm version"
+if [ $? -ne 0 ]; then
+    echo "Kubernetes installation failed."
+    exit 1
+fi
 
 # # Disable swap
 pssh -i -h $ips "sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab"
@@ -76,7 +89,7 @@ pssh -i -h $ips "sudo sysctl net.ipv4.ip_forward=1"
 # pssh -i -h $ips "sudo sysctl net.ipv4.conf.default.promote_secondaries=1"
 
 # net.ipv4.conf.default.promote_secondaries = 1
-pssh -i -h $ips 'cat << EOF | sudo tee /etc/sysctl.d/kubernetes.conf 
+pssh -i -h $ips 'sudo tee /etc/sysctl.d/kubernetes.conf << EOF
 net.bridge.bridge-nf-call-ip6tables = 1 
 net.ipv4.ip_forward = 1
 net.bridge.bridge-nf-call-iptables = 1 
@@ -85,5 +98,11 @@ EOF'
 # https://kubernetes.io/docs/concepts/cluster-administration/networking/
 # net.ipv4.ip_forward = 1 
 pssh -i -h $ips "sudo sysctl --system"
+
+# Add the kubectl auto-completion
+# https://kubernetes.io/docs/reference/kubectl/cheatsheet/
+# SHELL_REMOTE=bash
+# source <(kubectl completion $SHELL_REMOTE)  # setup autocomplete in zsh into the current shell
+# echo "[[ $commands[kubectl] ]] && source <(kubectl completion $SHELL_REMOTE)" >> ~/.zshrc # add autocomplete permanently to your zsh shell
 
 echo "Kubernetes configured."

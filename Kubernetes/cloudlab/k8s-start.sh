@@ -16,6 +16,7 @@ managers=(${!MANAGER_@})
 workers=(${!WORKER_@})
 
 # echo "$ip_manager"
+# echo $managers
 # echo ${!managers[0]}
 ssh ${!managers[0]} "sudo kubeadm init --control-plane-endpoint='$ip_manager' --apiserver-advertise-address='$ip_manager' --upload-certs --apiserver-cert-extra-sans='$ip_manager' --pod-network-cidr=10.244.0.0/16" > configs/logs.txt
 ssh ${!managers[0]} 'mkdir -p $HOME/.kube && sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config'

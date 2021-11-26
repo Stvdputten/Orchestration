@@ -10,6 +10,8 @@ echo "Starting remote env start-up scripts"
 # Configurations
 ips="configs/ips"
 
+pod_name_prom=kubectl get pods  -n monitoring | grep "prome-prometheus" | awk '{ print $1 }'
+
 # echo "Docker Install Beginning..."
 ssh $remote "curl -fsSL https://get.docker.com -o get-docker.sh"
 
@@ -20,7 +22,7 @@ ssh -n $remote "sudo lsof /var/lib/dpkg/lock-frontend | echo 'SUCCESS'"
 while [ ! $? -eq 0 ]; do
   echo "Waiting for front lock to be lifted"
   sleep 10
-  ssh -n $remote "sudo lsof /var/lib/dpkg/lock-frontend | grep SUCCESS" 
+  ssh -n $remote "sudo lsof /var/lib/dpkg/lock-frontend | grep 'SUCCESS'" 
 done
 
 ssh -n $remote "sudo apt-get update && sudo apt-get install -y vim git vim git apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop"
