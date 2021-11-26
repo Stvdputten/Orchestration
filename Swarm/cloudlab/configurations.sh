@@ -1,28 +1,34 @@
 #!/usr/bin/env bash
 
 ips="configs/ips"
-# pssh -i -h ~/.pssh_hosts_files "mkdir Swarm"
-# pssh -i -h ~/.pssh_hosts_files "cd Swarm"
-# pssh -i -h ~/.pssh_hosts_files "git clone https://github.com/delimitrou/DeathStarBench Swarm/DeathStarBench"
 
 # dpkg lock should done, so all should end with exit code 1
 # https://www.edureka.co/community/42504/error-dpkg-frontend-is-locked-by-another-process
 echo "Ensuring all dpkg are not locked, may take a while. Grab a coffee!"
 pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo 'SUCCESS'"
-while [ ! $? -eq 0 ]; do
+while [ $? -ne 0 ]; do
   echo "Waiting for front lock to be lifted"
   sleep 10
-  pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | grep SUCCESS" 
+  pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | grep 'SUCCESS'" 
 done
 
-echo "Docker Install Beginning..."
+# Install docker
 pssh -i -h $ips "curl -fsSL https://get.docker.com -o get-docker.sh"
-pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y vim git software-properties-common htop"
-pssh -i -h $ips "sudo sh get-docker.sh > /dev/null 2&1"
+pssh -i -h $ips "test -f 'get-docker.sh'"
+while [ ! $? -eq  0 ]; do
+  pssh -i -h $ips "curl -fsSL https://get.docker.com -o get-docker.sh"
+  pssh -i -h $ips "test -f 'get-docker.sh'"
+done
+pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop"
 
 # Configure Docker to run as the user
-pssh -i -h $ips 'sudo usermod -aG docker $USER'
 pssh -i -h $ips "docker --version"
+while [ $? -ne  0 ]; do
+  echo "Waiting for docker to be installed"
+  pssh -i -h $ips "VERSION=20.10 && sudo sh get-docker.sh > /dev/null 2&1"
+  pssh -i -h $ips 'sudo usermod -aG docker $USER'
+  pssh -i -h $ips "docker --version"
+done
 
 # Disable ufw
 pssh -i -h $ips "sudo ufw disable"
@@ -39,7 +45,7 @@ pssh -i -h $ips "sudo ufw disable"
 # Ensure daemon.json
 pssh -i -h $ips 'sudo rm /etc/docker/daemon.json'
 pssh -i -h $ips "sudo mkdir -p /etc/systemd/system/docker.service.d"
-pssh -i -h $ips 'cat << EOF | sudo tee /etc/docker/daemon.json  
+pssh -i -h $ips 'sudo tee /etc/docker/daemon.json  << EOF
 {
   "exec-opts": ["native.cgroupdriver=systemd"],
   "log-driver": "json-file",
@@ -62,4 +68,9 @@ pssh -i -h $ips 'sudo chmod +x /usr/local/bin/docker-compose'
 # Social-network
 # pssh -i -h $ips "sudo ufw allow 8080,9042,8081,16686,14269/tcp"
 # pssh -i -h $ips "sudo ufw allow 8080,9042,8081,16686,14269/udp"
+
+# Have the directories for DSB
+pssh -i -h $ips "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
+
+echo "Configurations done"
 
