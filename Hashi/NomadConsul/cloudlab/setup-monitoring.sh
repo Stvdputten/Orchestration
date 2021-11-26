@@ -6,7 +6,8 @@ user="stvdp"
 # Add consul server ip
 manager=$(head -n 1 configs/ips)
 # device="eno1"
-device="eno1d1"
+# device="eno1d1"
+device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | head -n 1 | cut -d: -f1")
 
 # uses internal ip not public ip
 ip_manager=$(ssh -n $manager "ip addr show $device | grep 'inet\b' | awk '{print \$2}' | cut -d/ -f1")

@@ -9,6 +9,8 @@ SERVER_2_IP=$(echo "$SERVER_2_IP" | cut -d'@' -f 2)
 SERVER_3_IP=$(echo "$SERVER_3_IP" | cut -d'@' -f 2)
 
 version="1.1.6"
+# TODO add device to bind-address
+device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | head -n 1 | cut -d: -f1")
 
 hashi-up nomad install \
   --ssh-target-addr $SERVER_1_IP \

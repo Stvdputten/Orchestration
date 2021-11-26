@@ -7,18 +7,19 @@ node3=$(sed -n '4p' configs/ips)
 node3_hostname=$(ssh -n $node3 "hostname")
 node3_ip=$(ssh -n $node3 "ip -4 a show eno1 |  grep \"inet\b\" | awk '{ print \$2}' | cut -d/ -f1")
 
-device="eno1"
+# device="eno1"
+device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | head -n 1 | cut -d: -f1")
 ip_manager=$(ssh -n $manager "ip addr show $device | grep 'inet\b' | awk '{print \$2}' | cut -d/ -f1")
 
-benchmark="social-network"
-benchmark="media-microservices"
-benchmark="hotel-reservations"
+# benchmark="social-network"
+# benchmark="media-microservices"
+# benchmark="hotel-reservations"
 
 # Download the repo
 # pssh -i -h $ips "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
 
 # update the DSB after updating the files
-pssh -i -h $ips "cd DeathStarBench && git pull && git reset --hard origin/local"
+# pssh -i -h $ips "cd DeathStarBench && git pull && git reset --hard origin/local"
 
 # Setup wrk2 etc
 # pssh -i -h $ips "sudo apt-get install -y pip luarocks libz-dev libssl-dev"
@@ -47,7 +48,7 @@ pssh -i -h $ips "cd DeathStarBench && git pull && git reset --hard origin/local"
 # pssh -i -h $ips "cd DeathStarBench/mediaMicroservices/nomad && sed '43s/\([0-9]\{1,3\}\.\)\{1,3\}[0-9]\{1,3\}/$ip_manager/' nginx.conf | sudo tee nginx.conf"
 
 # ssh $manager "cd DeathStarBench/socialNetwork/nomad && sed -e '3s/\".*\"/\"$node3_hostname\"/' -e '8s/\".*\"/\"$node3_ip\"/' -e '13s/\".*\"/\"$ip_manager\"/' social-network-detach.nomad | sudo tee social-network-detach.nomad"
-pssh -i -h $ips "cd DeathStarBench/socialNetwork/nomad/nginx-web-server/conf && sed '45s/\([0-9]\{1,3\}\.\)\{1,3\}[0-9]\{1,3\}/$ip_manager/' nginx.conf | sudo tee nginx.conf"
+# pssh -i -h $ips "cd DeathStarBench/socialNetwork/nomad/nginx-web-server/conf && sed '45s/\([0-9]\{1,3\}\.\)\{1,3\}[0-9]\{1,3\}/$ip_manager/' nginx.conf | sudo tee nginx.conf"
 
 # ssh $manager "cd DeathStarBench/socialNetwork/nomad && nomad job run social-network-detach.nomad"
 # ssh $manager "cd DeathStarBench/socialNetwork/nomad && sed -e '3s/\".*\"/\"$node3_hostname\"/' -e '8s/\".*\"/\"$node3_ip\"/' -e '13s/\".*\"/\"$ip_manager\"/' social-network-detach.nomad | sudo tee social-network-detach.nomad"

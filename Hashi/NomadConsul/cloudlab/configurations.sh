@@ -10,33 +10,45 @@ pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo 'SUCCESS'"
 while [ ! $? -eq 0 ]; do
   echo "Waiting for front lock to be lifted"
   sleep 10
-  pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo SUCCESS" 
+  pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo 'SUCCESS'" 
 done
 
 echo "Docker Install Beginning..."
-# Install docker
-# https://docs.docker.com/engine/install/ubuntu/
-# Update the apt packages and get a couple of basic tools
-pssh -i -h $ips "sudo apt-get update"
-pssh -i -h $ips "sudo apt-get install -y unzip curl vim jq apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release"
-pssh -i -h $ips "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg"
-pssh -i -h $ips 'echo \
-  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null'
+pssh -i -h $ips "curl -fsSL https://get.docker.com -o get-docker.sh"
+pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop"
+pssh -i -h $ips "VERSION=20.10 && sudo sh get-docker.sh > /dev/null 2&1"
 
-pssh -i -h $ips "sudo mkdir /tmp/archive/"
+# echo "Docker Install Beginning..."
+# # Install docker
+# # https://docs.docker.com/engine/install/ubuntu/
+# # Update the apt packages and get a couple of basic tools
+# pssh -i -h $ips "sudo apt-get update"
+# pssh -i -h $ips "sudo apt-get install -y unzip curl vim jq apt-transport-https \
+#     ca-certificates \
+#     curl \
+#     gnupg \
+#     lsb-release"
+# pssh -i -h $ips "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg"
+# pssh -i -h $ips 'echo \
+#   "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+#   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null'
 
-# Install Docker Community Edition
-pssh -i -h $ips "sudo apt-get update -y"
-pssh -i -h $ips "sudo apt-get install -y docker-ce docker-ce-cli containerd.io "
+# pssh -i -h $ips "sudo mkdir /tmp/archive/"
+
+# # Install Docker Community Edition
+# pssh -i -h $ips "sudo apt-get update -y"
+# pssh -i -h $ips "sudo apt-get install -y docker-ce docker-ce-cli containerd.io "
+# # pssh -i -h $ips "VERSION=20.10 && sudo sh get-docker.sh > /dev/null 2&1"
 
 # Configure Docker to be run as the user
 pssh -i -h $ips 'sudo usermod -aG docker $USER'
-pssh -i -h $ips "sudo docker --version"
+pssh -i -h $ips "docker --version"
+while [ ! $? -eq  0 ]; do
+  echo "Waiting for docker to be installed"
+  pssh -i -h $ips "VERSION=20.10 && sudo sh get-docker.sh > /dev/null 2&1"
+  pssh -i -h $ips "docker --version"
+done
+pssh -i -h $ips 'sudo usermod -aG docker $USER'
 
 pssh -i -h $ips 'sudo rm /etc/docker/daemon.json'
 pssh -i -h $ips "sudo mkdir -p /etc/systemd/system/docker.service.d"
