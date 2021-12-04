@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+#Contains stuff that only needs to be setup once
+
 # ips="$HOME/.pssh_hosts_files"
 ips="configs/ips"
 
@@ -13,32 +15,15 @@ while [ ! $? -eq 0 ]; do
   pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo 'SUCCESS'" 
 done
 
+# Install docker
 echo "Docker Install Beginning..."
 pssh -i -h $ips "curl -fsSL https://get.docker.com -o get-docker.sh"
+pssh -i -h $ips "test -f 'get-docker.sh'"
+while [ ! $? -eq  0 ]; do
+  pssh -i -h $ips "curl -fsSL https://get.docker.com -o get-docker.sh"
+  pssh -i -h $ips "test -f 'get-docker.sh'"
+done
 pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop"
-pssh -i -h $ips "VERSION=20.10 && sudo sh get-docker.sh > /dev/null 2&1"
-
-# echo "Docker Install Beginning..."
-# # Install docker
-# # https://docs.docker.com/engine/install/ubuntu/
-# # Update the apt packages and get a couple of basic tools
-# pssh -i -h $ips "sudo apt-get update"
-# pssh -i -h $ips "sudo apt-get install -y unzip curl vim jq apt-transport-https \
-#     ca-certificates \
-#     curl \
-#     gnupg \
-#     lsb-release"
-# pssh -i -h $ips "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg"
-# pssh -i -h $ips 'echo \
-#   "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-#   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null'
-
-# pssh -i -h $ips "sudo mkdir /tmp/archive/"
-
-# # Install Docker Community Edition
-# pssh -i -h $ips "sudo apt-get update -y"
-# pssh -i -h $ips "sudo apt-get install -y docker-ce docker-ce-cli containerd.io "
-# # pssh -i -h $ips "VERSION=20.10 && sudo sh get-docker.sh > /dev/null 2&1"
 
 # Configure Docker to be run as the user
 pssh -i -h $ips 'sudo usermod -aG docker $USER'
@@ -50,9 +35,11 @@ while [ ! $? -eq  0 ]; do
 done
 pssh -i -h $ips 'sudo usermod -aG docker $USER'
 
+# Ensure daemon.json
 pssh -i -h $ips 'sudo rm /etc/docker/daemon.json'
 pssh -i -h $ips "sudo mkdir -p /etc/systemd/system/docker.service.d"
-pssh -i -h $ips 'cat << EOF | sudo tee /etc/docker/daemon.json  
+# pssh -i -h $ips 'cat << EOF | sudo tee /etc/docker/daemon.json  
+pssh -i -h $ips 'sudo tee /etc/docker/daemon.json  << EOF
 {
   "exec-opts": ["native.cgroupdriver=systemd"],
   "log-driver": "json-file",
@@ -65,11 +52,12 @@ pssh -i -h $ips 'cat << EOF | sudo tee /etc/docker/daemon.json
 }
 EOF'
 
+# Enable docker service
 pssh -i -h $ips "sudo systemctl enable docker"
 pssh -i -h $ips "sudo systemctl daemon-reload"
 pssh -i -h $ips "sudo systemctl restart docker"
 
-echo "Nomad and Consul Install Beginning..."
+echo "Nomad and Consul setup..."
 
 # Install hashi-up
 pssh -i -h $ips "curl -sLS https://get.hashi-up.dev | sudo sh"
@@ -105,3 +93,13 @@ pssh -i -h $ips "echo 1 | sudo tee /proc/sys/net/bridge/bridge-nf-call-iptables"
 # setup dnsmasq https://computingforgeeks.com/install-and-configure-dnsmasq-on-ubuntu/
 # sudo systemctl disable systemd-resolved
 # sudo systemctl stop systemd-resolved
+
+# Download the repo
+pssh -i -h $ips "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
+
+# Setup wrk2 etc
+pssh -i -h $ips "sudo apt-get install -y pip luarocks libz-dev libssl-dev"
+pssh -i -h $ips "pip install --no-input asyncio aiohttp"
+pssh -i -h $ips "sudo luarocks install luasocket"
+
+echo "Configurations done"

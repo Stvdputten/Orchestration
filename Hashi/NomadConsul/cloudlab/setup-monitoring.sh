@@ -43,7 +43,7 @@ pssh -i -h $ips "sudo docker run -d \
     --volume=/sys:/sys:ro \
     --volume=/var/lib/docker/:/var/lib/docker:ro \
     --volume=/dev/disk/:/dev/disk:ro \
-    --publish=8085:8080 \
+    --publish=8090:8080 \
     --detach=true \
     --name=cadvisor \
     --privileged \

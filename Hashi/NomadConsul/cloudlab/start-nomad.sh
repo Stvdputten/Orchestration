@@ -3,13 +3,13 @@
 source configs/roles
 user="stvdp"
 agents=(${!AGENT_@})
+manager=$(head -n 1 configs/ips)
 
 SERVER_1_IP=$(echo "$SERVER_1_IP" | cut -d'@' -f 2)
 SERVER_2_IP=$(echo "$SERVER_2_IP" | cut -d'@' -f 2)
 SERVER_3_IP=$(echo "$SERVER_3_IP" | cut -d'@' -f 2)
 
 version="1.1.6"
-# TODO add device to bind-address
 device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | head -n 1 | cut -d: -f1")
 
 hashi-up nomad install \
@@ -18,7 +18,7 @@ hashi-up nomad install \
   --server \
   --version $version \
   --bootstrap-expect 3 \
-  --advertise '{{ GetInterfaceIP "eno1"}}'
+  --advertise "{{ GetInterfaceIP \"$device\"}}"
   # --address '{{ GetInterfaceIP "eth0"}}'
 
 hashi-up nomad install \
@@ -27,7 +27,7 @@ hashi-up nomad install \
   --server \
   --version $version \
   --bootstrap-expect 3 \
-  --advertise '{{ GetInterfaceIP "eno1"}}'
+  --advertise "{{ GetInterfaceIP \"$device\"}}"
   # --address '{{ GetInterfaceIP "eth0"}}'
 
 hashi-up nomad install \
@@ -36,7 +36,7 @@ hashi-up nomad install \
   --server \
   --version $version \
   --bootstrap-expect 3 \
-  --advertise '{{ GetInterfaceIP "eno1"}}'
+  --advertise "{{ GetInterfaceIP \"$device\"}}"
   # --address '{{ GetInterfaceIP "eth0"}}'
 
 # Can be done parallel, $command & , but might be preferable to do it sequentially
@@ -47,7 +47,7 @@ for agent in ${agents[@]}; do
     --ssh-target-user $user \
     --version $version \
     --client \
-    --advertise '{{ GetInterfaceIP "eno1"}}'
+    --advertise "{{ GetInterfaceIP \"$device\"}}"
     # --advertise-addr '{{ GetInterfaceIP "eth0"}}'
 
 # enable docker volumes
