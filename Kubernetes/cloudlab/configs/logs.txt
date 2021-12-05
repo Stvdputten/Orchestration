@@ -1,4 +1,4 @@
-[init] Using Kubernetes version: v1.22.2
+[init] Using Kubernetes version: v1.22.4
 [preflight] Running pre-flight checks
 [preflight] Pulling images required for setting up a Kubernetes cluster
 [preflight] This might take a minute or two, depending on the speed of your internet connection
@@ -6,15 +6,15 @@
 [certs] Using certificateDir folder "/etc/kubernetes/pki"
 [certs] Generating "ca" certificate and key
 [certs] Generating "apiserver" certificate and key
-[certs] apiserver serving cert is signed for DNS names [kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local node0.stvdp-106478.sched-serv-pg0.utah.cloudlab.us] and IPs [10.96.0.1 128.110.217.35]
+[certs] apiserver serving cert is signed for DNS names [kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local node0.stvdp-112712.sched-serv-pg0.utah.cloudlab.us] and IPs [10.96.0.1 128.110.219.130]
 [certs] Generating "apiserver-kubelet-client" certificate and key
 [certs] Generating "front-proxy-ca" certificate and key
 [certs] Generating "front-proxy-client" certificate and key
 [certs] Generating "etcd/ca" certificate and key
 [certs] Generating "etcd/server" certificate and key
-[certs] etcd/server serving cert is signed for DNS names [localhost node0.stvdp-106478.sched-serv-pg0.utah.cloudlab.us] and IPs [128.110.217.35 127.0.0.1 ::1]
+[certs] etcd/server serving cert is signed for DNS names [localhost node0.stvdp-112712.sched-serv-pg0.utah.cloudlab.us] and IPs [128.110.219.130 127.0.0.1 ::1]
 [certs] Generating "etcd/peer" certificate and key
-[certs] etcd/peer serving cert is signed for DNS names [localhost node0.stvdp-106478.sched-serv-pg0.utah.cloudlab.us] and IPs [128.110.217.35 127.0.0.1 ::1]
+[certs] etcd/peer serving cert is signed for DNS names [localhost node0.stvdp-112712.sched-serv-pg0.utah.cloudlab.us] and IPs [128.110.219.130 127.0.0.1 ::1]
 [certs] Generating "etcd/healthcheck-client" certificate and key
 [certs] Generating "apiserver-etcd-client" certificate and key
 [certs] Generating "sa" key and public key
@@ -32,15 +32,15 @@
 [control-plane] Creating static Pod manifest for "kube-scheduler"
 [etcd] Creating static Pod manifest for local etcd in "/etc/kubernetes/manifests"
 [wait-control-plane] Waiting for the kubelet to boot up the control plane as static Pods from directory "/etc/kubernetes/manifests". This can take up to 4m0s
-[apiclient] All control plane components are healthy after 11.006013 seconds
+[apiclient] All control plane components are healthy after 5.001644 seconds
 [upload-config] Storing the configuration used in ConfigMap "kubeadm-config" in the "kube-system" Namespace
 [kubelet] Creating a ConfigMap "kubelet-config-1.22" in namespace kube-system with the configuration for the kubelets in the cluster
 [upload-certs] Storing the certificates in Secret "kubeadm-certs" in the "kube-system" Namespace
 [upload-certs] Using certificate key:
-c2d7764ede401427e5ad46f2a0fe49006e0bc27e86cc73b23f307deef6a1dab5
-[mark-control-plane] Marking the node node0.stvdp-106478.sched-serv-pg0.utah.cloudlab.us as control-plane by adding the labels: [node-role.kubernetes.io/master(deprecated) node-role.kubernetes.io/control-plane node.kubernetes.io/exclude-from-external-load-balancers]
-[mark-control-plane] Marking the node node0.stvdp-106478.sched-serv-pg0.utah.cloudlab.us as control-plane by adding the taints [node-role.kubernetes.io/master:NoSchedule]
-[bootstrap-token] Using token: mayc5v.mqld8t8g0w95bfbz
+d5f8cc223bc8eeb038495af36238aaac8717799239c1557ccd61ce174d9a145d
+[mark-control-plane] Marking the node node0.stvdp-112712.sched-serv-pg0.utah.cloudlab.us as control-plane by adding the labels: [node-role.kubernetes.io/master(deprecated) node-role.kubernetes.io/control-plane node.kubernetes.io/exclude-from-external-load-balancers]
+[mark-control-plane] Marking the node node0.stvdp-112712.sched-serv-pg0.utah.cloudlab.us as control-plane by adding the taints [node-role.kubernetes.io/master:NoSchedule]
+[bootstrap-token] Using token: lheaa2.5c81avokc9qpcx4u
 [bootstrap-token] Configuring bootstrap tokens, cluster-info ConfigMap, RBAC Roles
 [bootstrap-token] configured RBAC rules to allow Node Bootstrap tokens to get nodes
 [bootstrap-token] configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
@@ -69,9 +69,9 @@ Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
 
 You can now join any number of the control-plane node running the following command on each as root:
 
-  kubeadm join 128.110.217.35:6443 --token mayc5v.mqld8t8g0w95bfbz \
-	--discovery-token-ca-cert-hash sha256:ba41fe3fc795b437f06b0176b2eb266b1a4b9e64f9dafdd28c755922c69ee9c5 \
-	--control-plane --certificate-key c2d7764ede401427e5ad46f2a0fe49006e0bc27e86cc73b23f307deef6a1dab5
+  kubeadm join 128.110.219.130:6443 --token lheaa2.5c81avokc9qpcx4u \
+	--discovery-token-ca-cert-hash sha256:aacd4eb0efcc865784b495b6181bffd2f113b186d9fa9743e1e2a9f3eb3a77fc \
+	--control-plane --certificate-key d5f8cc223bc8eeb038495af36238aaac8717799239c1557ccd61ce174d9a145d
 
 Please note that the certificate-key gives access to cluster sensitive data, keep it secret!
 As a safeguard, uploaded-certs will be deleted in two hours; If necessary, you can use
@@ -79,5 +79,5 @@ As a safeguard, uploaded-certs will be deleted in two hours; If necessary, you c
 
 Then you can join any number of worker nodes by running the following on each as root:
 
-kubeadm join 128.110.217.35:6443 --token mayc5v.mqld8t8g0w95bfbz \
-	--discovery-token-ca-cert-hash sha256:ba41fe3fc795b437f06b0176b2eb266b1a4b9e64f9dafdd28c755922c69ee9c5 
+kubeadm join 128.110.219.130:6443 --token lheaa2.5c81avokc9qpcx4u \
+	--discovery-token-ca-cert-hash sha256:aacd4eb0efcc865784b495b6181bffd2f113b186d9fa9743e1e2a9f3eb3a77fc 

@@ -78,4 +78,9 @@ pssh -i -h $ips "sudo systemctl restart docker"
 # Have the directories for DSB
 pssh -i -h $ips "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
 
+# Setup wrk2 etc
+pssh -i -h $ips "sudo apt-get install -y pip luarocks libz-dev libssl-dev"
+pssh -i -h $ips "pip install --no-input asyncio aiohttp"
+pssh -i -h $ips "sudo luarocks install luasocket"
+
 echo "Configurations done"
