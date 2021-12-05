@@ -62,8 +62,8 @@ pssh -i -h $ips "sudo systemctl daemon-reload"
 pssh -i -h $ips "sudo systemctl restart docker"
 
 # docker-compose for hotel
-pssh -i -h $ips 'sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
-pssh -i -h $ips 'sudo chmod +x /usr/local/bin/docker-compose'
+# pssh -i -h $ips 'sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
+# pssh -i -h $ips 'sudo chmod +x /usr/local/bin/docker-compose'
 
 # Social-network
 # pssh -i -h $ips "sudo ufw allow 8080,9042,8081,16686,14269/tcp"
@@ -71,6 +71,11 @@ pssh -i -h $ips 'sudo chmod +x /usr/local/bin/docker-compose'
 
 # Have the directories for DSB
 pssh -i -h $ips "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
+
+# Setup wrk2 etc
+pssh -i -h $ips "sudo apt-get install -y pip luarocks libz-dev libssl-dev"
+pssh -i -h $ips "pip install --no-input asyncio aiohttp"
+pssh -i -h $ips "sudo luarocks install luasocket"
 
 echo "Configurations done"
 
