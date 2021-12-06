@@ -39,7 +39,7 @@ do
 		echo "hotelReservation app is ready to be experimented on."
 
 		echo "hotelReservation workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh" > ./results/nomad-hr-wrk-mixed.txt
+		ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh" > ./results/swarm-hr-wrk-mixed.txt
 		echo "hotelReservation workloads done."
 
 		# Stop the benchmark
@@ -67,7 +67,7 @@ do
 		echo "mediaMicroservices app is ready to be experimented on."
 
 		echo "mediaMicroservices workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh" > ./results/nomad-mm-wrk-compose.txt
+		ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh" > ./results/swarm-mm-wrk-compose.txt
 		echo "mediaMicroservices workloads done."
 
 		# Stop the benchmark
@@ -96,9 +96,9 @@ do
 		echo "socialNetwork app is ready to be experimented on."
 
 		echo "socialNetwork workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-home.sh" > ./results/nomad-sn-wrk-home.txt
-		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-user.sh" > ./results/nomad-sn-wrk-user.txt
-		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-compose.sh" > ./results/nomad-sn-wrk-compose.txt
+		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-home.sh" > ./results/swarm-sn-wrk-home.txt
+		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-user.sh" > ./results/swarm-sn-wrk-user.txt
+		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-compose.sh" > ./results/swarm-sn-wrk-compose.txt
 		echo "socialNetwork workloads done."
 
 		# Stop the benchmark
