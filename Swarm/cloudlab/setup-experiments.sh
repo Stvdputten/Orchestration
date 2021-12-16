@@ -15,11 +15,10 @@ ssh -n $remote "cd DeathStarBench && git reset --hard origin/local && git pull"
 # benchmark="socialNetwork"
 # benchmark="mediaMicroservices"
 benchmark="hotelReservation"
-
+date=$(date "+%d-%m-%y")
+mkdir -p ./results/$date
 # deploy 1 of the services
-# for benchmark in socialNetwork mediaMicroservices hotelReservation
-# for benchmark in socialNetwork mediaMicroservices hotelReservation
-for benchmark in hotelReservation
+for benchmark in socialNetwork mediaMicroservices hotelReservation
 do
 	if [ $benchmark == "hotelReservation" ]; then
 		echo "Deploying hotelReservation app"
@@ -39,7 +38,7 @@ do
 		echo "hotelReservation app is ready to be experimented on."
 
 		echo "hotelReservation workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh" > ./results/swarm-hr-wrk-mixed.txt
+		ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh" > ./results/$date/swarm-hr-wrk-mixed.txt
 		echo "hotelReservation workloads done."
 
 		# Stop the benchmark
@@ -67,7 +66,7 @@ do
 		echo "mediaMicroservices app is ready to be experimented on."
 
 		echo "mediaMicroservices workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh" > ./results/swarm-mm-wrk-compose.txt
+		ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh" > ./results/$date/swarm-mm-wrk-compose.txt
 		echo "mediaMicroservices workloads done."
 
 		# Stop the benchmark
@@ -96,9 +95,9 @@ do
 		echo "socialNetwork app is ready to be experimented on."
 
 		echo "socialNetwork workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-home.sh" > ./results/swarm-sn-wrk-home.txt
-		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-user.sh" > ./results/swarm-sn-wrk-user.txt
-		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-compose.sh" > ./results/swarm-sn-wrk-compose.txt
+		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-home.sh" > ./results/$date/swarm-sn-wrk-home.txt
+		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-user.sh" > ./results/$date/swarm-sn-wrk-user.txt
+		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-compose.sh" > ./results/$date/swarm-sn-wrk-compose.txt
 		echo "socialNetwork workloads done."
 
 		# Stop the benchmark

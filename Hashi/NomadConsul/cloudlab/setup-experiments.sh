@@ -11,6 +11,8 @@ ip_manager=$(ssh -n $manager "ip addr show $device | grep 'inet\b' | awk '{print
 node3=$(sed -n '4p' configs/ips)
 node3_hostname=$(ssh -n $node3 "hostname")
 node3_ip=$(ssh -n $node3 "ip -4 a show $device |  grep \"inet\b\" | awk '{ print \$2}' | cut -d/ -f1")
+date=$(date "+%d-%m-%y")
+mkdir -p ./results/$date
 
 # update the DSB after updating the files
 pssh -i -h $ips "cd DeathStarBench && git reset --hard origin/local && git pull"
@@ -59,7 +61,7 @@ do
 		echo "hotelReservation app is ready to be experimented on."
 
 		echo "hotelReservation workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && export nginx_ip=$node3_ip && ./workload.sh" > ./results/nomad-hr-wrk-mixed.txt
+		ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && export nginx_ip=$node3_ip && ./workload.sh" > ./results/$date/nomad-hr-wrk-mixed.txt
 
 		# Stop the benchmark
 		# ssh $manager "cd DeathStarBench/hotelReservation/nomad && nomad job stop hotel-reservation"
@@ -85,7 +87,7 @@ do
 		echo "mediaMicroservices app is ready to be experimented on."
 
 		echo "mediaMicroservices workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && export nginx_ip=$node3_ip && ./workload.sh" > ./results/nomad-mm-wrk-compose.txt
+		ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && export nginx_ip=$node3_ip && ./workload.sh" > ./results/$date/nomad-mm-wrk-compose.txt
 
 		# Stop the benchmark
 		ssh $manager "cd DeathStarBench/mediaMicroservices/nomad && nomad job stop media-microservices"
@@ -112,9 +114,9 @@ do
 		# ./setup-tester.sh
 		# ssh -n $remote "ssh -i /tmp/sshkey -o StrictHostKeyChecking=no -L 8080:localhost:8080 stvdp@$node3_ip" 
 
-		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node3_ip && ./workload-home.sh" > ./results/nomad-sn-wrk-home.txt
-		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node3_ip && ./workload-user.sh" > ./results/nomad-sn-wrk-user.txt
-		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node3_ip && ./workload-compose.sh" > ./results/nomad-sn-wrk-compose.txt
+		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node3_ip && ./workload-home.sh" > ./results/$date/nomad-sn-wrk-home.txt
+		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node3_ip && ./workload-user.sh" > ./results/$date/nomad-sn-wrk-user.txt
+		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node3_ip && ./workload-compose.sh" > ./results/$date/nomad-sn-wrk-compose.txt
 		# echo "socialNetwork results are in."
 
 		# Stop the benchmark

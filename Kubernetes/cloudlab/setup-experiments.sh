@@ -22,6 +22,8 @@ benchmark="socialNetwork"
 # paths && variables
 dsb_dir="/users/stvdp/DeathStarBench/"
 # k8_dir="$dsb_dir/$benchmark/kubernetes"
+date=$(date "+%d-%m-%y")
+mkdir -p ./results/$date
 
 # for benchmark in hotelReservation
 for benchmark in socialNetwork mediaMicroservices hotelReservation
@@ -63,13 +65,13 @@ do
 
 		echo "hotelReservation workloads are being run..."
 		ssh -n $remote "sudo kill -9 \$(ps -ef | grep 5000 | head -n 1 | awk '{ print \$2 }')"
-		ssh -n $remote "kubectl port-forward -n hotel-res $pod_name_nginx 5000:5000 > /dev/null & sleep 3 && cd DeathStarBench/hotelReservation/wrk2 && ./workload.sh" > ./results/k8s-hr-wrk-mixed.txt & 
-		echo " " > ./results/k8s-hr-wrk-mixed.txt
-		head -n 3 ./results/k8s-hr-wrk-mixed.txt | grep Running
+		ssh -n $remote "kubectl port-forward -n hotel-res $pod_name_nginx 5000:5000 > /dev/null & sleep 3 && cd DeathStarBench/hotelReservation/wrk2 && ./workload.sh" > ./results/$date/k8s-hr-wrk-mixed.txt & 
+		echo " " > ./results/$date/k8s-hr-wrk-mixed.txt
+		head -n 3 ./results/$date/k8s-hr-wrk-mixed.txt | grep Running
 		while [ $? -ne 0 ]; do
 			# echo "waiting for experiments to be ready"
 			sleep 5
-			head -n 3 ./results/k8s-hr-wrk-mixed.txt | grep Running
+			head -n 3 ./results/$date/k8s-hr-wrk-mixed.txt | grep Running
 		done
 		echo "Workload done"
 		ssh -n $remote "sudo kill -9 \$(ps -ef | grep 5000 | head -n 1 | awk '{ print \$2 }')"
@@ -108,13 +110,13 @@ do
 
 		echo "mediaMicroservices workloads are being run..."
 		ssh -n $remote "sudo kill -9 \$(ps -ef | grep 8080 | head -n 1 | awk '{ print \$2 }')"
-		ssh -n $remote "kubectl port-forward -n media-microsvc $pod_name_nginx 8080:8080 > /dev/null & sleep 3 && cd DeathStarBench/mediaMicroservices/wrk2 && ./workload.sh" > ./results/k8s-mm-wrk-compose.txt & 
-		echo " " > ./results/k8s-mm-wrk-compose.txt
-		head -n 3 ./results/k8s-mm-wrk-compose.txt | grep Running
+		ssh -n $remote "kubectl port-forward -n media-microsvc $pod_name_nginx 8080:8080 > /dev/null & sleep 3 && cd DeathStarBench/mediaMicroservices/wrk2 && ./workload.sh" > ./results/$date/k8s-mm-wrk-compose.txt & 
+		echo " " > ./results/$date/k8s-mm-wrk-compose.txt
+		head -n 3 ./results/$date/k8s-mm-wrk-compose.txt | grep Running
 		while [ $? -ne 0 ]; do
 			# echo "waiting for experiments to be ready"
 			sleep 5
-			head -n 3 ./results/k8s-mm-wrk-compose.txt | grep Running
+			head -n 3 ./results/$date/k8s-mm-wrk-compose.txt | grep Running
 		done
 		echo "Workload done"
 		ssh -n $remote "sudo kill -9 \$(ps -ef | grep 8080 | head -n 1 | awk '{ print \$2 }')"
@@ -155,33 +157,33 @@ do
 
 		echo "socialNetwork workloads are being run..."
 		ssh -n $remote "sudo kill -9 \$(ps -ef | grep 8080 | head -n 1 | awk '{ print \$2 }')"
-		ssh -n $remote "kubectl port-forward -n social-network $pod_name_nginx 8080:8080 > /dev/null & sleep 3 && cd DeathStarBench/socialNetwork/wrk2 && ./workload-home.sh" > ./results/k8s-sn-wrk-home.txt & 
-		echo " " > ./results/k8s-sn-wrk-home.txt
-		head -n 3 ./results/k8s-sn-wrk-home.txt | grep Running
+		ssh -n $remote "kubectl port-forward -n social-network $pod_name_nginx 8080:8080 > /dev/null & sleep 3 && cd DeathStarBench/socialNetwork/wrk2 && ./workload-home.sh" > ./results/$date/k8s-sn-wrk-home.txt & 
+		echo " " > ./results/$date/k8s-sn-wrk-home.txt
+		head -n 3 ./results/$date/k8s-sn-wrk-home.txt | grep Running
 		while [ $? -ne 0 ]; do
 			# echo "waiting for experiments to be ready"
 			sleep 5
-			head -n 3 ./results/k8s-sn-wrk-home.txt | grep Running
+			head -n 3 ./results/$date/k8s-sn-wrk-home.txt | grep Running
 		done
 		echo "Workload home done"
 
-		ssh -n $remote "sleep 3 && cd DeathStarBench/socialNetwork/wrk2 && ./workload-user.sh" > ./results/k8s-sn-wrk-user.txt & 
-		echo " " > ./results/k8s-sn-wrk-user.txt
-		head -n 3 ./results/k8s-sn-wrk-user.txt | grep Running
+		ssh -n $remote "sleep 3 && cd DeathStarBench/socialNetwork/wrk2 && ./workload-user.sh" > ./results/$date/k8s-sn-wrk-user.txt & 
+		echo " " > ./results/$date/k8s-sn-wrk-user.txt
+		head -n 3 ./results/$date/k8s-sn-wrk-user.txt | grep Running
 		while [ $? -ne 0 ]; do
 			# echo "waiting for experiments to be ready"
 			sleep 5
-			head -n 3 ./results/k8s-sn-wrk-user.txt | grep Running
+			head -n 3 ./results/$date/k8s-sn-wrk-user.txt | grep Running
 		done
 		echo "Workload user done"
 
-		ssh -n $remote "sleep 3 && cd DeathStarBench/socialNetwork/wrk2 && ./workload-compose.sh" > ./results/k8s-sn-wrk-compose.txt & 
-		echo " " > ./results/k8s-sn-wrk-compose.txt
-		head -n 3 ./results/k8s-sn-wrk-compose.txt | grep Running
+		ssh -n $remote "sleep 3 && cd DeathStarBench/socialNetwork/wrk2 && ./workload-compose.sh" > ./results/$date/k8s-sn-wrk-compose.txt & 
+		echo " " > ./results/$date/k8s-sn-wrk-compose.txt
+		head -n 3 ./results/$date/k8s-sn-wrk-compose.txt | grep Running
 		while [ $? -ne 0 ]; do
 			# echo "waiting for experiments to be ready"
 			sleep 5
-			head -n 3 ./results/k8s-sn-wrk-compose.txt | grep Running
+			head -n 3 ./results/$date/k8s-sn-wrk-compose.txt | grep Running
 		done
 		echo "Workload compose done"
 

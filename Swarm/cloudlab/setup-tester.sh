@@ -53,50 +53,14 @@ ssh -n $remote "sudo luarocks install luasocket"
 ssh -n $remote "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
 
 #  Check if wrk is exists
-ssh $remote "cd DeathStarBench/socialNetwork/wrk2 && make clean && make"
-ssh $remote "cd DeathStarBench/mediaMicroservices/wrk2 && make clean && make"
-ssh $remote "cd DeathStarBench/hotelReservation/wrk2 && make clean && make"
-
-# Install kubectl 
-# https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-other-package-management
-# ssh -n "$remote" "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common"
-# wait
-# ssh -n "$remote" "sudo rm /etc/apt/sources.list.d/kubernetes.list" 
-# wait
-# ssh -n "$remote" "sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg"
-# wait
-# ssh -n "$remote" 'echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list'
-# wait
-# ssh -n "$remote" "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y kubectl"
-# wait
-# ssh -n "$remote" "sudo apt-mark hold kubectl"
-# wait
-# ssh -n "$remote" "kubectl version --client"
+ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && make clean && make"
+ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && make clean && make"
+ssh -h $remote "cd DeathStarBench/hotelReservation/wrk2 && make clean && make"
 
 # Send ssh-key to remote cluster
-ssh -n "$remote" "ssh-keygen -t rsa -f /tmp/sshkey -q -N '' <<< $'\ny' >/dev/null 2>&1"
+ssh -n $remote "ssh-keygen -t rsa -f /tmp/sshkey -q -N '' <<< $'\ny' >/dev/null 2>&1"
 pubkey=$(ssh -n "$remote" "cat /tmp/sshkey.pub")
 pssh -i -h $ips "echo $pubkey >> /users/stvdp/.ssh/authorized_keys"
-
-# echo "Copy Kubernetes configs"
-# https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/ 
-# setup k8s access on remote machine
-# ssh -n $remote 'mkdir -p $HOME/.kube'
-# scp $manager:'/users/stvdp/.kube/config' .
-# scp ./config  $remote:'/users/stvdp/.kube/config'
-# rm ./config
-
-# connect to k8  cluster
-# ssh -n "$remote" "mkdir -p ~/.kube/"
-# ssh -n "$remote" "touch ~/.kube/cloudlab_config_k8"
-# ssh -n "$remote" "scp -i /tmp/sshkey $manager:/users/stvdp/.kube/config /users/stvdp/.kube/cloudlab_config_k8"
-# ssh -n "$remote" "echo export KUBECONFIG=\'/users/stvdp/.kube/cloudlab_config_k8\' >> ~/.bashrc_profile"
-# ssh -n "$remote" "echo export KUBECONFIG=\'/users/stvdp/.kube/cloudlab_config_k8\' >> ~/.bashrc"
-
-# nomad/hashi/kubectl
-
-# monitoring
-# pod_name_prom=kubectl get pods  -n monitoring | grep "prome-prometheus" | awk '{ print $1 }'
 
 echo "Configurations remote tester done"
 # echo "$manager"
