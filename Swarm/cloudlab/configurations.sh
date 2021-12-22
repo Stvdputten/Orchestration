@@ -5,6 +5,7 @@ ips="configs/ips"
 # dpkg lock should done, so all should end with exit code 1
 # https://www.edureka.co/community/42504/error-dpkg-frontend-is-locked-by-another-process
 echo "Ensuring all dpkg are not locked, may take a while. Grab a coffee!"
+echo "Make sure your ssh-key is added as default key to ssh-agent"
 pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo 'SUCCESS'"
 while [ $? -ne 0 ]; do
   echo "Waiting for front lock to be lifted"
@@ -19,13 +20,13 @@ while [ ! $? -eq  0 ]; do
   pssh -i -h $ips "curl -fsSL https://get.docker.com -o get-docker.sh"
   pssh -i -h $ips "test -f 'get-docker.sh'"
 done
-pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop"
+pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop" > /dev/null 2&>1
 
 # Configure Docker to run as the user
 pssh -i -h $ips "docker --version"
 while [ $? -ne  0 ]; do
   echo "Waiting for docker to be installed"
-  pssh -i -h $ips "VERSION=20.10 && sudo sh get-docker.sh > /dev/null 2&1"
+  pssh -i -h $ips "VERSION=20.10 && sudo sh get-docker.sh" > /dev/null 2&>1
   pssh -i -h $ips 'sudo usermod -aG docker $USER'
   pssh -i -h $ips "docker --version"
 done
@@ -43,7 +44,7 @@ pssh -i -h $ips "sudo ufw disable"
 # pssh -i -h $ips "sudo ufw allow 9323,3000,9090,8080,8000,9100,9323/udp"
 
 # Ensure daemon.json
-pssh -i -h $ips 'sudo rm /etc/docker/daemon.json'
+pssh -i -h $ips 'sudo rm /etc/docker/daemon.json' > /dev/null 2&>1
 pssh -i -h $ips "sudo mkdir -p /etc/systemd/system/docker.service.d"
 pssh -i -h $ips 'sudo tee /etc/docker/daemon.json  << EOF
 {
@@ -61,18 +62,10 @@ pssh -i -h $ips "sudo systemctl enable docker"
 pssh -i -h $ips "sudo systemctl daemon-reload"
 pssh -i -h $ips "sudo systemctl restart docker"
 
-# docker-compose for hotel
-# pssh -i -h $ips 'sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
-# pssh -i -h $ips 'sudo chmod +x /usr/local/bin/docker-compose'
-
-# Social-network
-# pssh -i -h $ips "sudo ufw allow 8080,9042,8081,16686,14269/tcp"
-# pssh -i -h $ips "sudo ufw allow 8080,9042,8081,16686,14269/udp"
-
 # Have the directories for DSB
 pssh -i -h $ips "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
 
-# Setup wrk2 etc
+# Setup packages required to load datasets or use wrk2 etc
 pssh -i -h $ips "sudo apt-get install -y pip luarocks libz-dev libssl-dev"
 pssh -i -h $ips "pip install --no-input asyncio aiohttp"
 pssh -i -h $ips "sudo luarocks install luasocket"
