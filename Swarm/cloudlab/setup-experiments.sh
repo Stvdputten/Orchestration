@@ -31,11 +31,43 @@ fi
 
 # echo $benchmark
 # exit 0 
+# Check if we use unlimited resources in the deployment files
+if [ -z "$unlimited" ]; then
+	# 0 means true
+	# 1 means false, limited deployment
+	export unlimited=0
+fi
+
+if [ -z "$availability" ]; then
+	export availability=0
+fi
+
+if [ -z "$vertical" ]; then
+	export vertical=1
+fi
+
+if [ -z "$horizontal" ]; then
+	export horizontal=0
+fi
+
 
 # This part is running seperately 
-ips="configs/ips"
-manager=$(head -n 1 configs/ips)
-remote=$(head -n 1 configs/remote)
+if [ -z "$ips" ]; then
+	ips="configs/ips"
+	export ips=$ips
+fi
+if [ -z "$manager" ]; then
+	manager=$(head -n 1 configs/ips)
+	export manager=$manager
+fi
+if [ -z "$remote" ]; then
+	remote=$(head -n 1 configs/remote)
+	export remote=$remote
+fi
+if [ -z "$experiment" ]; then
+	experiment="free"
+	export experiment=$experiment
+fi
 
 # Make sure prometheus isn't installed in home directory
 # pssh -i -h $ips "git clone https://github.com/Stvdputten/DeathStarBench"
@@ -55,6 +87,11 @@ fi
 date=$(date "+%H:%MT%d-%m-%Y")
 dir_date=$(date "+%d-%m-%y")
 mkdir -p ./results/$dir_date
+
+# TODO add functions to output results to file
+# output_results(){
+# 	echo "bob"
+# }
 
 run_benchmark(){
 	if [ $benchmark == "hotelReservation" ]; then
@@ -78,7 +115,13 @@ run_benchmark(){
 					ssh -n $manager "docker stack rm $bench_name"
 					sleep 5
 					pssh -i -h $ips "sudo systemctl restart docker"
-					ssh $manager "cd DeathStarBench/hotelReservation && docker stack deploy -c docker-compose-swarm-local.yml hotel-reservation"
+					if [ $unlimited -eq 1 ]; then 
+						echo "Running hotel reservation with limited resources"
+						ssh $manager "cd DeathStarBench/hotelReservation && docker stack deploy -c docker-swarm-limited-resources.yml hotel-reservation"
+					elif [ $unlimited -eq 0 ]; then
+						echo "Running hotel reservation with unlimited resources"
+						ssh $manager "cd DeathStarBench/hotelReservation && docker stack deploy -c docker-compose-swarm-local.yml hotel-reservation"
+					fi
 					count=0
 				fi
 				ssh $manager "docker stack services $bench_name" | grep '0/1' 
@@ -97,7 +140,7 @@ run_benchmark(){
 		echo "hotelReservation app is ready to be experimented on."
 
 		echo "hotelReservation workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-hr-wrk-mixed-$server_type-t$t-c$c-d$d-R$R.txt
+		ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-hr-wrk-mixed-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
 		echo "hotelReservation workloads done."
 
 		# Stop the benchmark
@@ -119,13 +162,20 @@ run_benchmark(){
 			ssh $manager "docker stack services $bench_name" | grep '0/1' 
 			while [ $? -ne 1 ]; do
 				echo "waiting for swarm services to be ready"
+				count=$((count+1))
 				sleep 5
 				if [ $count -gt 10 ]; then
 					echo "Swarm services are not ready"
 					ssh -n $manager "docker stack rm $bench_name"
 					sleep 5
 					pssh -i -h $ips "sudo systemctl restart docker"
-					ssh $manager "cd DeathStarBench/mediaMicroservices && docker stack deploy -c docker-compose-swarm.yml media-microservices"
+					if [ $unlimited -eq 1 ]; then 
+						echo "Running media-microservices with limited resources"
+						ssh $manager "cd DeathStarBench/mediaMicroservices && docker stack deploy -c docker-swarm-limited-resources.yml media-microservices"
+					elif [ $unlimited -eq 0 ]; then
+						echo "Running media-microservices with unlimited resources"
+						ssh $manager "cd DeathStarBench/mediaMicroservices && docker stack deploy -c docker-compose-swarm.yml media-microservices"
+					fi
 					count=0
 				fi
 				ssh $manager "docker stack services $bench_name" | grep '0/1' 
@@ -148,7 +198,7 @@ run_benchmark(){
 		echo "The jaeger service is found on $node_name_jaeger"
 
 		echo "mediaMicroservices workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-mm-wrk-compose-$server_type-t$t-c$c-d$d-R$R.txt
+		ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-mm-wrk-compose-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
 		echo "mediaMicroservices workloads done."
 
 		# Stop the benchmark
@@ -165,19 +215,32 @@ run_benchmark(){
 		bench_name="social-network"
 		ssh $manager "docker stack ls" | grep "$bench_name" > /dev/null 2>&1 
 		if [ $? -ne 0 ]; then
-			ssh $manager "cd DeathStarBench/socialNetwork && docker stack deploy -c docker-compose-swarm-jaeger.yml social-network"
+			if [ $unlimited -eq 1 ]; then 
+				echo "Running socialNetwork with limited resources"
+				ssh $manager "cd DeathStarBench/socialNetwork && docker stack deploy -c docker-swarm-limited-resources.yml social-network"
+			elif [ $unlimited -eq 0 ]; then
+				echo "Running socialNetwork with unlimited resources"
+				ssh $manager "cd DeathStarBench/socialNetwork && docker stack deploy -c docker-compose-swarm-jaeger.yml social-network"
+			fi
 
 			count=0
 			ssh $manager "docker stack services $bench_name" | grep '0/1' 
 			while [ $? -ne 1 ]; do
 				echo "waiting for swarm services to be ready"
+				count=$((count+1))
 				sleep 5
 				if [ $count -gt 10 ]; then
 					echo "Swarm services are not ready"
 					ssh -n $manager "docker stack rm $bench_name"
 					sleep 5
 					pssh -i -h $ips "sudo systemctl restart docker"
-					ssh $manager "cd DeathStarBench/socialNetwork && docker stack deploy -c docker-compose-swarm-jaeger.yml social-network"
+					if [ $unlimited -eq 1 ]; then 
+						echo "Running socialNetwork with limited resources"
+						ssh $manager "cd DeathStarBench/socialNetwork && docker stack deploy -c docker-swarm-limited-resources.yml social-network"
+					elif [ $unlimited -eq 0 ]; then
+						echo "Running socialNetwork with unlimited resources"
+						ssh $manager "cd DeathStarBench/socialNetwork && docker stack deploy -c docker-compose-swarm-jaeger.yml social-network"
+					fi
 					count=0
 				fi
 				ssh $manager "docker stack services $bench_name" | grep '0/1' 
@@ -200,10 +263,10 @@ run_benchmark(){
 		echo "socialNetwork app is ready to be experimented on."
 
 		echo "socialNetwork workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-home.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-home-$server_type-t$t-c$c-d$d-R$R.txt
-		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-user.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-user-$server_type-t$t-c$c-d$d-R$R.txt
-		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-compose.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-compose-$server_type-t$t-c$c-d$d-R$R.txt
-		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-mixed.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-mixed-$server_type-t$t-c$c-d$d-R$R.txt
+		# ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-home.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-home-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
+		# ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-user.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-user-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
+		# ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-compose.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-compose-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
+		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-mixed.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-mixed-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
 		echo "socialNetwork workloads done."
 
 		# Stop the benchmark

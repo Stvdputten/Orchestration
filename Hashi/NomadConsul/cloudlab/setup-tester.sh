@@ -1,14 +1,21 @@
 #!/usr/bin/env bash
 # The params
 user="stvdp"
-remote=$(head -n 1 configs/remote)
-manager=$(head -n 1 configs/ips)
-# remote="$user@$ip"
-ips=configs/ips
+if [ -z "$ips" ]; then
+	ips="configs/ips"
+	export ips=$ips
+fi
+if [ -z "$manager" ]; then
+	manager=$(head -n 1 configs/ips)
+	export manager=$manager
+fi
+if [ -z "$remote" ]; then
+	remote=$(head -n 1 configs/remote)
+	export remote=$remote
+fi
 
 echo "Setup Tester"
 echo "Starting remote env start-up scripts"
-# Configurations
 
 # dpkg lock should done, so all should end with exit code 1
 # https://www.edureka.co/community/42504/error-dpkg-frontend-is-locked-by-another-process
@@ -46,25 +53,25 @@ ssh -n $remote "sudo systemctl enable docker"
 ssh -n $remote "sudo systemctl daemon-reload"
 ssh -n $remote "sudo systemctl restart docker"
 
-# Download the repo
-ssh -n $remote "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
-
 # Setup wrk2 etc
 ssh -n $remote "sudo apt-get install -y pip luarocks libz-dev libssl-dev"
 ssh -n $remote "pip install --no-input asyncio aiohttp"
 ssh -n $remote "sudo luarocks install luasocket"
 
-#  Check if wrk is exists
-ssh $remote "cd DeathStarBench/socialNetwork/wrk2 && make clean && make"
-ssh $remote "cd DeathStarBench/mediaMicroservices/wrk2 && make clean && make"
-ssh $remote "cd DeathStarBench/hotelReservation/wrk2 && make clean && make"
+# Download the repo
+ssh -n $remote "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
 
-# Create key and send public ssh-key to remote cluster
+#  Check if wrk is exists
+ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && make clean && make"
+ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && make clean && make"
+ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && make clean && make"
+
+# Send ssh-key to remote cluster
 ssh -n "$remote" "ssh-keygen -t rsa -f /tmp/sshkey -q -N '' <<< $'\ny' >/dev/null 2>&1"
 pubkey=$(ssh -n "$remote" "cat /tmp/sshkey.pub")
 pssh -i -h $ips "echo $pubkey >> /users/stvdp/.ssh/authorized_keys"
 
 echo "Configurations remote tester done"
-echo "$manager"
 echo "The ip of remote experimentor is:"
 echo "$remote"
+exit 0

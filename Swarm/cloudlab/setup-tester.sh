@@ -1,9 +1,18 @@
 #!/usr/bin/env bash
 # The params
 user="stvdp"
-remote=$(head -n 1 configs/remote)
-manager=$(head -n 1 configs/ips)
-ips=configs/ips
+if [ -z "$ips" ]; then
+	ips="configs/ips"
+	export ips=$ips
+fi
+if [ -z "$manager" ]; then
+	manager=$(head -n 1 configs/ips)
+	export manager=$manager
+fi
+if [ -z "$remote" ]; then
+	remote=$(head -n 1 configs/remote)
+	export remote=$remote
+fi
 
 echo "Setup Tester"
 echo "Starting remote env start-up scripts"
@@ -61,8 +70,16 @@ ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && make clean && make"
 ssh -n $remote "ssh-keygen -t rsa -f /tmp/sshkey -q -N '' <<< $'\ny' >/dev/null 2>&1"
 pubkey=$(ssh -n "$remote" "cat /tmp/sshkey.pub")
 pssh -i -h $ips "echo $pubkey >> /users/stvdp/.ssh/authorized_keys"
+# TODO FIX broken pip error
+# pssh -i -h $ips "cat ~/.ssh/authorized_keys | grep $pubkey > /dev/null 2>&1" 
+# while [ ! $? -eq  0 ]; do
+#   echo "Waiting for ssh-key to be installed"
+#   pssh -i -h $ips "echo $pubkey >> /users/stvdp/.ssh/authorized_keys"
+#   pssh -i -h $ips "cat ~/.ssh/authorized_keys | grep $pubkey > /dev/null 2>&1"
+# done
 
 echo "Configurations remote tester done"
 # echo "$manager"
 echo "The ip of remote experimentor is:"
 echo "$remote"
+exit 0

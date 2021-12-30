@@ -4,12 +4,20 @@
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
 # source ./configs/ips
 source configs/roles
-ips="configs/ips"
+# ips="configs/ips"
+
+if [ -z "$ips" ]; then
+  ips="configs/ips"
+  export ips=$ips
+fi
 
 echo "Kubernetes configuration is starting."
-# kubeadm_version="1.20.7-00"
-# kubelet_version="1.20.7-00"
-# kubectl_version="1.20.7-00"
+kubeadm_version="1.23.1-00"
+export kubeadm_version=$kubeadm_version
+kubelet_version="1.23.1-00"
+export kubelet_version=$kubelet_version
+kubectl_version="1.23.1-00"
+export kubectl_version=$kubectl_version
 pssh -i -h $ips 'sudo chsh -s /bin/bash $USER'
 
 
@@ -63,7 +71,7 @@ while [ $? -ne 0 ]; do
     # wait
     # pssh -i -h $ips "echo 'deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main' | sudo tee /etc/apt/sources.list.d/kubernetes.list"
     # wait
-    pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y kubelet kubeadm kubectl"
+    pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y kubelet=$kubelet_version kubeadm=$kubeadm_version kubectl=$kubectl_version"
     wait
     pssh -i -h $ips "sudo apt-mark hold kubelet kubeadm kubectl"
     wait

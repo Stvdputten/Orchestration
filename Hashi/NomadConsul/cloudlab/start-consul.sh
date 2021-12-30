@@ -11,7 +11,7 @@ SERVER_1_IP=$(echo "$SERVER_1_IP" | cut -d'@' -f 2)
 SERVER_2_IP=$(echo "$SERVER_2_IP" | cut -d'@' -f 2)
 SERVER_3_IP=$(echo "$SERVER_3_IP" | cut -d'@' -f 2)
 
-version="1.10.3"
+consul_version="1.10.3"
 device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | head -n 1 | cut -d: -f1")
 
 echo "Setup control-plane"
@@ -21,7 +21,7 @@ hashi-up consul install \
   --server \
   --client-addr 0.0.0.0 \
   --bootstrap-expect 3 \
-  --version $version \
+  --version $consul_version \
   --connect \
   --retry-join $SERVER_1_IP --retry-join $SERVER_2_IP --retry-join $SERVER_3_IP \
   --bind-addr "{{ GetInterfaceIP \"$device\"}}"
@@ -34,7 +34,7 @@ hashi-up consul install \
   --server \
   --client-addr 0.0.0.0 \
   --bootstrap-expect 3 \
-  --version $version \
+  --version $consul_version \
   --connect \
   --retry-join $SERVER_1_IP --retry-join $SERVER_2_IP --retry-join $SERVER_3_IP \
   --bind-addr "{{ GetInterfaceIP \"$device\"}}"
@@ -45,7 +45,7 @@ hashi-up consul install \ #   --ssh-target-addr $SERVER_3_IP \
   --ssh-target-user $user \
   --server \
   --client-addr 0.0.0.0 \
-  --version $version \
+  --version $consul_version \
   --connect \
   --bootstrap-expect 3 \
   --retry-join $SERVER_1_IP --retry-join $SERVER_2_IP --retry-join $SERVER_3_IP \
@@ -60,10 +60,11 @@ for agent in ${agents[@]}; do
     --ssh-target-addr  $(echo ${!agent} | cut -d'@' -f 2 ) \
     --ssh-target-user $user \
     --connect \
-    --version $version \
+    --version $consul_version \
     --retry-join $SERVER_1_IP --retry-join $SERVER_2_IP --retry-join $SERVER_3_IP \
     --bind-addr "{{ GetInterfaceIP \"$device\"}}"
     # --bind-addr '{{ GetInterfaceIP "eno1"}}'
     # --advertise-addr '{{ GetInterfaceIP "eth0"}}'
 done
 
+exit 0

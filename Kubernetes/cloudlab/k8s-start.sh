@@ -5,9 +5,17 @@
 # source ./configs/ips
 echo "Kubernetes setup is starting."
 source configs/roles
-ips="configs/ips"
 
-manager=$(head -n 1 configs/ips)
+if [ -z "$ips" ]; then
+  ips="configs/ips"
+  export ips=$ips
+fi
+
+if [ -z "$manager" ]; then
+  manager=$(head -n 1 configs/ips)
+  export manager=$manager
+fi
+
 # device="eno1"
 device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | head -n 1 | cut -d: -f1")
 ip_manager=$(ssh -n $manager "ip addr show $device | grep 'inet\b' | awk '{print \$2}' | cut -d/ -f1")
@@ -18,11 +26,11 @@ workers=(${!WORKER_@})
 # echo "$ip_manager"
 # echo $managers
 # echo ${!managers[0]}
-ssh ${!managers[0]} "sudo kubeadm init --control-plane-endpoint='$ip_manager' --apiserver-advertise-address='$ip_manager' --upload-certs --apiserver-cert-extra-sans='$ip_manager' --pod-network-cidr=10.244.0.0/16" > configs/logs.txt
-ssh ${!managers[0]} 'mkdir -p $HOME/.kube && sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config'
+ssh $manager "sudo kubeadm init --control-plane-endpoint='$ip_manager' --apiserver-advertise-address='$ip_manager' --upload-certs --apiserver-cert-extra-sans='$ip_manager' --pod-network-cidr=10.244.0.0/16" > configs/logs.txt
+ssh $manager 'mkdir -p $HOME/.kube && sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config'
 
 # SETUP first control plane node
-ssh ${!managers[0]} 'kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml'
+ssh $manager 'kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml'
 # # Untaint the nodes to make it possible to deploy apps on the master nodes
 
 
@@ -32,22 +40,26 @@ ssh ${!managers[0]} 'kubectl apply -f https://raw.githubusercontent.com/coreos/f
 
 add_manager=$(cat configs/logs.txt | grep "\-\-certificate-key")
 # echo "The manager control plane stuff is: $add_manager"
-join=$(ssh ${!managers[0]} 'kubeadm token create --print-join-command')
+join=$(ssh $manager 'kubeadm token create --print-join-command')
 # echo "$join $add_manager"
 
 # Can be done parallel, $command & , but might be preferable to do it sequentially
 echo "Setup control-plane"
 for manager in ${managers[@]:1}
 do
-    ssh -n "${!manager}" "sudo $join $add_manager"
-    ssh -n "${!manager}" 'mkdir -p $HOME/.kube && sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config' 
+    echo "${!manager} joining the cluster"
+    ssh -n "${!manager}" "sudo $join $add_manager" > /dev/null 2>&1
+    ssh -n "${!manager}" 'mkdir -p $HOME/.kube && sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config' > /dev/null 2>&1
+    sleep 5
 done
 
 echo "Setup worker nodes"
 for worker in ${workers[@]}
 do
+    echo "${!worker} joining the cluster"
     # indirect parameter expansion
-    ssh -n "${!worker}" "sudo $join" 
+    ssh -n "${!worker}" "sudo $join" > /dev/null 2>&1
+    sleep 2
 done
 
 # echo "Copy Kubernetes configs"

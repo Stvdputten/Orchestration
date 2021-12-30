@@ -1,44 +1,50 @@
 #!/usr/bin/env bash
 
-#Contains stuff that only needs to be setup once
+if [ -z "$ips" ]; then
+  ips="configs/ips"
+  export ips=$ips
+fi
 
-# ips="$HOME/.pssh_hosts_files"
-ips="configs/ips"
+docker_version="20.10"
 
 # dpkg lock should done, so all should end with exit code 1
 # https://www.edureka.co/community/42504/error-dpkg-frontend-is-locked-by-another-process
-# echo "Ensuring all dpkg are not locked, may take a while. Grab a coffee!"
+echo "Ensuring all dpkg are not locked, may take a while. Grab a coffee!"
+echo "Make sure your ssh-key is added as default key to ssh-agent"
+count=0
 pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo 'SUCCESS'"
-while [ ! $? -eq 0 ]; do
+while [ $? -ne 0 ]; do
   echo "Waiting for front lock to be lifted"
   sleep 10
-  pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo 'SUCCESS'" 
+  count=$((count+1))
+  if [ $count -eq 10 ]; then
+    echo "Failed to unlock dpkg"
+    exit 1
+  fi
+  pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | grep 'SUCCESS'" 
 done
 
 # Install docker
-echo "Docker Install Beginning..."
 pssh -i -h $ips "curl -fsSL https://get.docker.com -o get-docker.sh"
 pssh -i -h $ips "test -f 'get-docker.sh'"
 while [ ! $? -eq  0 ]; do
   pssh -i -h $ips "curl -fsSL https://get.docker.com -o get-docker.sh"
   pssh -i -h $ips "test -f 'get-docker.sh'"
 done
-pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop"
+pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop" > /dev/null 2>&1
 
-# Configure Docker to be run as the user
-pssh -i -h $ips 'sudo usermod -aG docker $USER'
+# Configure Docker to run as the user
 pssh -i -h $ips "docker --version"
-while [ ! $? -eq  0 ]; do
+while [ $? -ne  0 ]; do
   echo "Waiting for docker to be installed"
-  pssh -i -h $ips "VERSION=20.10 && sudo sh get-docker.sh > /dev/null 2&1"
+  pssh -i -h $ips "VERSION=$docker_version && sudo sh get-docker.sh" > /dev/null 2>&1
+  pssh -i -h $ips 'sudo usermod -aG docker $USER'
   pssh -i -h $ips "docker --version"
 done
-pssh -i -h $ips 'sudo usermod -aG docker $USER'
 
 # Ensure daemon.json
-pssh -i -h $ips 'sudo rm /etc/docker/daemon.json'
-pssh -i -h $ips "sudo mkdir -p /etc/systemd/system/docker.service.d"
-# pssh -i -h $ips 'cat << EOF | sudo tee /etc/docker/daemon.json  
+pssh -i -h $ips 'sudo rm /etc/docker/daemon.json' > /dev/null 2>&1
+pssh -i -h $ips "sudo mkdir -p /etc/systemd/system/docker.service.d" /dev/null 2>&1
 pssh -i -h $ips 'sudo tee /etc/docker/daemon.json  << EOF
 {
   "exec-opts": ["native.cgroupdriver=systemd"],
@@ -51,8 +57,6 @@ pssh -i -h $ips 'sudo tee /etc/docker/daemon.json  << EOF
   "experimental" : true
 }
 EOF'
-
-# Enable docker service
 pssh -i -h $ips "sudo systemctl enable docker"
 pssh -i -h $ips "sudo systemctl daemon-reload"
 pssh -i -h $ips "sudo systemctl restart docker"
@@ -67,17 +71,13 @@ pssh -i -h $ips "hashi-up version"
 # Disable ufw
 pssh -i -h $ips "sudo ufw disable"
 
-# Consul
-pssh -i -h $ips "sudo ufw allow 8300,8301,8302,8500,8600/udp"
-pssh -i -h $ips "sudo ufw allow 8300,8301,8302,8500,8600/tcp"
+# # Consul
+# pssh -i -h $ips "sudo ufw allow 8300,8301,8302,8500,8600/udp"
+# pssh -i -h $ips "sudo ufw allow 8300,8301,8302,8500,8600/tcp"
 
-# Nomad
-pssh -i -h $ips "sudo ufw allow 4648/udp"
-pssh -i -h $ips "sudo ufw allow 4646,4647,4648/tcp"
-
-# docker-compose for hotel
-pssh -i -h $ips 'sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
-pssh -i -h $ips 'sudo chmod +x /usr/local/bin/docker-compose'
+# # Nomad
+# pssh -i -h $ips "sudo ufw allow 4648/udp"
+# pssh -i -h $ips "sudo ufw allow 4646,4647,4648/tcp"
 
 # configuration for CNI
 # https://www.nomadproject.io/docs/integrations/consul-connect
@@ -97,9 +97,49 @@ pssh -i -h $ips "echo 1 | sudo tee /proc/sys/net/bridge/bridge-nf-call-iptables"
 # Download the repo
 pssh -i -h $ips "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
 
-# Setup wrk2 etc
-pssh -i -h $ips "sudo apt-get install -y pip luarocks libz-dev libssl-dev"
-pssh -i -h $ips "pip install --no-input asyncio aiohttp"
-pssh -i -h $ips "sudo luarocks install luasocket"
+# Setup packages required to load datasets or use wrk2 etc
+# sometimes the packages are not installed, so we try to install them again?
+pssh -i -h $ips "sudo apt-get install -y pip luarocks libz-dev libssl-dev" > /dev/null 2>&1
+pssh -i -h $ips "sudo dpkg -s luarocks libssl-dev zlib1g-dev python3-pip" > /dev/null 2>&1
+count=0 
+while [ $? -ne 0 ]; do
+  echo "Waiting for luarocks, libssl-dev, zlib1g-dev, python3-pip to be installed"
+  pssh -i -h $ips "sudo apt-get install -y pip luarocks libz-dev libssl-dev"
+  count=$((count+1))
+  if [ $count -eq 10 ]; then
+    echo "Failed to install packages, exiting"
+    exit 1
+  fi
+  pssh -i -h $ips "sudo dpkg -s luarocks libssl-dev zlib1g-dev python3-pip" > /dev/null 2>&1
+done
+
+pssh -i -h $ips "pip install --no-input asyncio aiohttp" > /dev/null 2>&1
+pssh -i -h $ips "python3 -c 'import aiohttp, asyncio'" > /dev/null 2>&1 
+count=0
+while [ $? -ne 0 ]; do
+  echo "Waiting for python3 asyncio and aiohttp to be installed"
+  pssh -i -h $ips "pip install --no-input asyncio aiohttp"
+  count=$((count+1))
+  if [ $count -eq 10 ]; then
+    echo "Failed to install packages, exiting"
+    exit 1
+  fi
+  pssh -i -h $ips "python3 -c 'import aiohttp, asyncio'" > /dev/null 2>&1 
+done
+
+pssh -i -h $ips "sudo luarocks install luasocket" > /dev/null 2>&1
+pssh -i -h $ips "luarocks list | grep 'luasocket'"
+count=0
+while [ $? -ne 0 ]; do
+  echo "Waiting for luasocket to be installed"
+  pssh -i -h $ips "sudo luarocks install luasocket" 
+  count=$((count+1))
+  if [ $count -eq 10 ]; then
+    echo "Failed to install packages, exiting"
+    exit 1
+  fi
+  pssh -i -h $ips "luarocks list | grep 'luasocket'" > /dev/null 2>&1
+done
 
 echo "Configurations done"
+exit 0

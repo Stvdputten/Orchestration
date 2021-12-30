@@ -4,19 +4,19 @@ source configs/roles
 user="stvdp"
 agents=(${!AGENT_@})
 manager=$(head -n 1 configs/ips)
+nomad_version="1.1.6"
 
 SERVER_1_IP=$(echo "$SERVER_1_IP" | cut -d'@' -f 2)
 SERVER_2_IP=$(echo "$SERVER_2_IP" | cut -d'@' -f 2)
 SERVER_3_IP=$(echo "$SERVER_3_IP" | cut -d'@' -f 2)
 
-version="1.1.6"
 device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | head -n 1 | cut -d: -f1")
 
 hashi-up nomad install \
   --ssh-target-addr $SERVER_1_IP \
   --ssh-target-user $user \
   --server \
-  --version $version \
+  --version $nomad_version \
   --bootstrap-expect 3 \
   --advertise "{{ GetInterfaceIP \"$device\"}}"
   # --address '{{ GetInterfaceIP "eth0"}}'
@@ -25,7 +25,7 @@ hashi-up nomad install \
   --ssh-target-addr $SERVER_2_IP \
   --ssh-target-user $user \
   --server \
-  --version $version \
+  --version $nomad_version \
   --bootstrap-expect 3 \
   --advertise "{{ GetInterfaceIP \"$device\"}}"
   # --address '{{ GetInterfaceIP "eth0"}}'
@@ -34,7 +34,7 @@ hashi-up nomad install \
   --ssh-target-addr $SERVER_3_IP \
   --ssh-target-user $user \
   --server \
-  --version $version \
+  --version $nomad_version \
   --bootstrap-expect 3 \
   --advertise "{{ GetInterfaceIP \"$device\"}}"
   # --address '{{ GetInterfaceIP "eth0"}}'
@@ -45,7 +45,7 @@ for agent in ${agents[@]}; do
   hashi-up nomad install \
     --ssh-target-addr  $(echo ${!agent} | cut -d'@' -f 2 ) \
     --ssh-target-user $user \
-    --version $version \
+    --version $nomad_version \
     --client \
     --advertise "{{ GetInterfaceIP \"$device\"}}"
     # --advertise-addr '{{ GetInterfaceIP "eth0"}}'
@@ -61,3 +61,5 @@ client {
 EOF' > /dev/null
 ssh -n ${!agent} 'sudo systemctl restart nomad.service'
 done
+
+exit 0

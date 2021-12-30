@@ -1,19 +1,26 @@
 #!/usr/bin/env bash
 # The params
 user="stvdp"
-# ip="ms0810.utah.cloudlab.us"
-# remote="$user@$ip"
-remote=$(head -n 1 configs/remote)
-manager=$(head -n 1 configs/ips)
-ips=configs/ips
+if [ -z "$ips" ]; then
+	ips="configs/ips"
+	export ips=$ips
+fi
+if [ -z "$manager" ]; then
+	manager=$(head -n 1 configs/ips)
+	export manager=$manager
+fi
+if [ -z "$remote" ]; then
+	remote=$(head -n 1 configs/remote)
+	export remote=$remote
+fi
+
+if [ -z "$kubectl_version" ]; then
+  kubectl_version="1.23.1-00"
+  export kubectl_version=$kubectl_version
+fi
 
 echo "Setup Tester"
 echo "Starting remote env start-up scripts"
-# Configurations
-
-
-# echo "Docker Install Beginning..."
-# ssh $remote "curl -fsSL https://get.docker.com -o get-docker.sh"
 
 # dpkg lock should done, so all should end with exit code 1
 # https://www.edureka.co/community/42504/error-dpkg-frontend-is-locked-by-another-process
@@ -60,9 +67,9 @@ ssh -n $remote "sudo luarocks install luasocket"
 ssh -n $remote "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
 
 #  Check if wrk is exists
-ssh $remote "cd DeathStarBench/socialNetwork/wrk2 && make clean && make"
-ssh $remote "cd DeathStarBench/mediaMicroservices/wrk2 && make clean && make"
-ssh $remote "cd DeathStarBench/hotelReservation/wrk2 && make clean && make"
+ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && make clean && make"
+ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && make clean && make"
+ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && make clean && make"
 
 # Install kubectl 
 # https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-other-package-management
@@ -74,7 +81,7 @@ ssh -n "$remote" "sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyrin
 wait
 ssh -n "$remote" 'echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list'
 wait
-ssh -n "$remote" "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y kubectl"
+ssh -n "$remote" "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y kubectl=$kubectl_version"
 wait
 ssh -n "$remote" "sudo apt-mark hold kubectl"
 wait
@@ -93,19 +100,8 @@ scp $manager:'/users/stvdp/.kube/config' .
 scp ./config  $remote:'/users/stvdp/.kube/config'
 rm ./config
 
-# connect to k8  cluster
-# ssh -n "$remote" "mkdir -p ~/.kube/"
-# ssh -n "$remote" "touch ~/.kube/cloudlab_config_k8"
-# ssh -n "$remote" "scp -i /tmp/sshkey $manager:/users/stvdp/.kube/config /users/stvdp/.kube/cloudlab_config_k8"
-# ssh -n "$remote" "echo export KUBECONFIG=\'/users/stvdp/.kube/cloudlab_config_k8\' >> ~/.bashrc_profile"
-# ssh -n "$remote" "echo export KUBECONFIG=\'/users/stvdp/.kube/cloudlab_config_k8\' >> ~/.bashrc"
-
-# nomad/hashi/kubectl
-
-# monitoring
-# pod_name_prom=kubectl get pods  -n monitoring | grep "prome-prometheus" | awk '{ print $1 }'
-
 echo "Configurations remote tester done"
 # echo "$manager"
 echo "The ip of remote experimentor is:"
 echo "$remote"
+exit 0
