@@ -11,8 +11,8 @@ docker_version="20.10"
 # https://www.edureka.co/community/42504/error-dpkg-frontend-is-locked-by-another-process
 echo "Ensuring all dpkg are not locked, may take a while. Grab a coffee!"
 echo "Make sure your ssh-key is added as default key to ssh-agent"
-pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo 'SUCCESS'"
 count=0
+pssh -i -h $ips "sudo lsof /var/lib/dpkg/lock-frontend | echo 'SUCCESS'"
 while [ $? -ne 0 ]; do
   echo "Waiting for front lock to be lifted"
   sleep 10

@@ -15,10 +15,10 @@ if [ -z "$t" ] && [ -z "$c" ] && [ -z "$d" ] && [ -z "$R" ]; then
 	echo "-------------------------------------------------------";
 	echo "No params, using default settings of -t 4 -c 8 -d 30 -R 200";
 	echo "-------------------------------------------------------";
-	t=4
-	c=8
+	t=8
+	c=512
 	d=30
-	R=200
+	R=500
 else
 	echo "-------------------------------------------------------";
 	echo "Experiments are run using the following parameters:";
@@ -29,8 +29,7 @@ else
 	echo "-------------------------------------------------------";
 fi
 
-# echo $benchmark
-# exit 0 
+# Experiment parameters
 # Check if we use unlimited resources in the deployment files
 if [ -z "$unlimited" ]; then
 	# 0 means true
@@ -51,7 +50,7 @@ if [ -z "$horizontal" ]; then
 fi
 
 
-# This part is running seperately 
+# This part checks the nodes params
 if [ -z "$ips" ]; then
 	ips="configs/ips"
 	export ips=$ips
@@ -69,9 +68,6 @@ if [ -z "$experiment" ]; then
 	export experiment=$experiment
 fi
 
-# Make sure prometheus isn't installed in home directory
-# pssh -i -h $ips "git clone https://github.com/Stvdputten/DeathStarBench"
-
 # update the DSB after updating the files
 pssh -i -h $ips "cd DeathStarBench && git pull && git reset --hard origin/local" > /dev/null 2>&1
 ssh -n $remote "cd DeathStarBench && git reset --hard origin/local && git pull" > /dev/null 2>&1
@@ -84,14 +80,9 @@ elif echo $manager | cut -d@ -f2 | grep "ms" > /dev/null; then
 fi
 
 # setup directories based on date
-date=$(date "+%H:%MT%d-%m-%Y")
+# date=$(date "+%H:%MT%d-%m-%Y")
 dir_date=$(date "+%d-%m-%y")
 mkdir -p ./results/$dir_date
-
-# TODO add functions to output results to file
-# output_results(){
-# 	echo "bob"
-# }
 
 run_benchmark(){
 	if [ $benchmark == "hotelReservation" ]; then
@@ -140,7 +131,7 @@ run_benchmark(){
 		echo "hotelReservation app is ready to be experimented on."
 
 		echo "hotelReservation workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-hr-wrk-mixed-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
+		ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-hr-wrk-mixed-exp$experiment-$server_type-t$t-c$c-d$d-R$R
 		echo "hotelReservation workloads done."
 
 		# Stop the benchmark
@@ -198,7 +189,7 @@ run_benchmark(){
 		echo "The jaeger service is found on $node_name_jaeger"
 
 		echo "mediaMicroservices workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-mm-wrk-compose-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
+		ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-mm-wrk-compose-exp$experiment-$server_type-t$t-c$c-d$d-R$R
 		echo "mediaMicroservices workloads done."
 
 		# Stop the benchmark
@@ -266,7 +257,7 @@ run_benchmark(){
 		# ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-home.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-home-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
 		# ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-user.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-user-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
 		# ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-compose.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-compose-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
-		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-mixed.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-mixed-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
+		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-mixed.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-mixed-exp$experiment-$server_type-t$t-c$c-d$d-R$R
 		echo "socialNetwork workloads done."
 
 		# Stop the benchmark
@@ -290,3 +281,5 @@ else
 	echo "---------------------"
 	run_benchmark
 fi
+
+exit 0
