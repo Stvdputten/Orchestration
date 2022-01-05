@@ -1,30 +1,33 @@
 #!/usr/bin/env bash
 
-#  8 vs 16 threads should overload nginx
+# WHAT THIS EXPERIMENT IS ABOUT
+echo "Experiments to see if our expectation of 16 cores breaking the system simply because of the amount of cores on the client"
 
 # Run from the dir above
 cd $(dirname $0)/..
 
+# node params
+export ips="configs/ips"
+export manager=$(head -n 1 configs/ips)
+export remote=$(head -n 1 configs/remote)
+
+# experiment params
+export experiment=$(echo "$0" | cut -d'/' -f2 | cut -d'_' -f1)
+export availability=0
+export unlimited=0
+export horizontal=1
+export vertical=1
+
+# Make sure not previous deployments are running
+ssh $manager "docker stack rm social-network" > /dev/null 2>&1
+ssh $manager "docker stack rm media-microservices" > /dev/null 2>&1
+ssh $manager "docker stack rm hotel-reservation" > /dev/null 2>&1
+
+#  8 vs 16 threads should overload nginx
+
 # Running the baseline tests for all benchmarks and stressing the system
 # From the previous baseline test, we need to be sure that the nginx can handle the requests and the system is stable so we decrease the threads and open connections
 # This experiment should shows that the nginx breaking point is based on the connections to handle and threads overloading it.
-
-# This part is setting up the experiment
-ips="configs/ips"
-manager=$(head -n 1 configs/ips)
-remote=$(head -n 1 configs/remote)
-# experiment is based on the first number of the filename 
-experiment=$(echo "$0" | cut -d'/' -f2 | cut -d'_' -f1)
-
-export ips=$ips
-export manager=$manager
-export remote=$remote
-export experiment=$experiment
-
-# Remove any stack of previous experiments
-ssh $manager "docker stack rm social-network"
-ssh $manager "docker stack rm media-microservices"
-ssh $manager "docker stack rm hotel-reservation"
 
 # Check if the requests influence the latency with different connections and max threads of tester
 # Shows the breaking point of social network is not that high actually, the throughput bottlenecks around 2000 RPS

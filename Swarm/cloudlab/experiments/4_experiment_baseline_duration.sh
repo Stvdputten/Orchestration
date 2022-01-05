@@ -1,28 +1,27 @@
 #!/usr/bin/env bash
 
-# This part basically checks the assumption of duration on the latency measurements.
+# WHAT THIS EXPERIMENT IS ABOUT
+echo "Experiments to explore effect of duration on the measurements"
 
 # Run from the dir above
 cd $(dirname $0)/..
 
-# Running the baseline tests for all benchmarks
-echo "Running the baseline tests for all benchmarks on the influence of duration."
+# node params
+export ips="configs/ips"
+export manager=$(head -n 1 configs/ips)
+export remote=$(head -n 1 configs/remote)
 
-# This part is setting up the experiment
-ips="configs/ips"
-manager=$(head -n 1 configs/ips)
-remote=$(head -n 1 configs/remote)
-# experiment is based on the first number of the filename 
-experiment=$(echo "$0" | cut -d'/' -f2 | cut -d'_' -f1)
+# experiment params
+export experiment=$(echo "$0" | cut -d'/' -f2 | cut -d'_' -f1)
+export availability=0
+export unlimited=0
+export horizontal=1
+export vertical=1
 
-export ips=$ips
-export manager=$manager
-export remote=$remote
-export experiment=$experiment
-
-ssh $manager "docker stack rm social-network"
-ssh $manager "docker stack rm media-microservices"
-ssh $manager "docker stack rm hotel-reservation"
+# Make sure not previous deployments are running
+ssh $manager "docker stack rm social-network" > /dev/null 2>&1
+ssh $manager "docker stack rm media-microservices" > /dev/null 2>&1
+ssh $manager "docker stack rm hotel-reservation" > /dev/null 2>&1
 
 unset benchmark
 for benchmark in socialNetwork mediaMicroservices hotelReservation; do

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # WHAT THIS EXPERIMENT IS ABOUT
-echo "Experiments to explore the current chosen setup with multiple clients"
+echo "Experiment to see latency with the system baseline with unlimited resources using the simple settings"
 
 # Run from the dir above
 cd $(dirname $0)/..
@@ -23,16 +23,6 @@ ssh $manager "docker stack rm social-network" > /dev/null 2>&1
 ssh $manager "docker stack rm media-microservices" > /dev/null 2>&1
 ssh $manager "docker stack rm hotel-reservation" > /dev/null 2>&1
 
-# Run workloads on all remotes
 unset benchmark
-for benchmark in socialNetwork mediaMicroservices hotelReservation; do
-	echo "Running the baseline tests for $benchmark"
-	export benchmark=$benchmark
-	for remote in $(cat configs/remote); do
-		export remote=$remote
-		./setup-experiments_multi_clients.sh -t 8 -c 512 -d 30 -R 200 
-	done
-done
+./setup-experiments.sh -t 4 -c 8 -d 30 -R 200 
 
-done
-echo "All experiment have been run (hopefully)."

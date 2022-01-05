@@ -1,0 +1,4 @@
+# node params
+export ips="configs/ips"
+export manager=$(head -n 1 configs/ips)
+export remote=$(head -n 1 configs/remote)
