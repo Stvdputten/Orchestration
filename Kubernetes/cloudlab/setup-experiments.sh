@@ -31,23 +31,28 @@ fi
 
 # Experiment parameters
 # Check if we use unlimited resources in the deployment files
+# 0 means true
+# 1 means false
 if [ -z "$unlimited" ]; then
-	# 0 means true
-	# 1 means false, limited deployment
-	export unlimited=1
+	# resources are unlimited
+	export unlimited=0
 fi
 
 if [ -z "$availability" ]; then
+	# master nodes consists of 3 nodes, cause of high availability
 	export availability=0
 fi
 
 if [ -z "$vertical" ]; then
+	# resources have not been increased
 	export vertical=1
 fi
 
 if [ -z "$horizontal" ]; then
-	export horizontal=0
+	# containers have not been scaled global/horizontal
+	export horizontal=1
 fi
+
 
 # This part checks the nodes params
 if [ -z "$ips" ]; then
@@ -67,14 +72,6 @@ if [ -z "$experiment" ]; then
 	export experiment=$experiment
 fi
 
-device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | head -n 1 | cut -d: -f1")
-ip_manager=$(ssh -n $manager "ip addr show $device | grep 'inet\b' | awk '{print \$2}' | cut -d/ -f1")
-
-# we set the deployment on node 3 
-node3=$(sed -n '4p' configs/ips)
-node3_hostname=$(ssh -n $node3 "hostname")
-node3_ip=$(ssh -n $node3 "ip -4 a show $device |  grep \"inet\b\" | awk '{ print \$2}' | cut -d/ -f1")
-
 # update the DSB after updating the files
 pssh -i -h $ips "cd DeathStarBench && git pull && git reset --hard origin/local" > /dev/null 2>&1
 ssh -n $remote "cd DeathStarBench && git reset --hard origin/local && git pull" > /dev/null 2>&1
@@ -86,11 +83,23 @@ elif echo $manager | cut -d@ -f2 | grep "ms" > /dev/null; then
 	server_type="m510"
 fi
 
-# setup directories based on date
-dsb_dir="/users/stvdp/DeathStarBench/"
-# date=$(date "+%h:%mt%d-%m-%y")
+# PARAMS ORCHESTRATOR WIDE
+
+# setup directories based on date for the experiments
 dir_date=$(date "+%d-%m-%y")
 mkdir -p ./results/$dir_date
+
+# file params to output
+output_name=$server_type-exp$experiment-havail$availability-hori$horizontal-verti$vertical-infi$unlimited-t$t-c$c-d$d-R$R
+
+# return ip manager and network device
+device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | head -n 1 | cut -d: -f1")
+ip_manager=$(ssh -n $manager "ip addr show $device | grep 'inet\b' | awk '{print \$2}' | cut -d/ -f1")
+
+# ORCHESTRATOR SPECIFIC PARAMS
+
+# specify base dir of the DSB
+dsb_dir="/users/stvdp/DeathStarBench/"
 
 run_benchmark(){
 	if [ $benchmark == "hotelReservation" ]; then
@@ -208,14 +217,7 @@ run_benchmark(){
 		# done
 
 		# sleep 3
-		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/k8s-hr-wrk-mixed-exp$experiment-$server_type-t$t-c$c-d$d-R$R
-		# ssh -n $remote "kubectl port-forward -n hotel-res $pod_name_nginx 5000:5000 > /dev/null & sleep 3 && cd DeathStarBench/hotelReservation/wrk2 && ./workload.sh $t -c $c -d $d -R $R" > ./results/$dir_date/k8s-hr-wrk-mixed-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
-		# echo " " > ./results/$date/k8s-hr-wrk-mixed.txt
-		# head -n 3 ./results/$date/k8s-hr-wrk-mixed.txt | grep Running
-		# while [ $? -ne 0 ]; do
-		# 	# echo "waiting for experiments to be ready"
-		# 	sleep 5
-		# 	head -n 3 ./results/$date/k8s-hr-wrk-mixed.txt | grep Running
+		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/k8s-hr-wrk-mixed-$output_name
 		# done
 		echo "Workload done"
 		# ssh -n $remote "sudo kill -9 \$(ps -ef | grep 5000 | head -n 1 | awk '{ print \$2 }')"
@@ -327,7 +329,7 @@ run_benchmark(){
 		echo "mediaMicroservices app is ready to be experimented on."
 
 		echo "mediaMicroservices workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/k8s-mm-wrk-compose-exp$experiment-$server_type-t$t-c$c-d$d-R$R
+		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/k8s-mm-wrk-compose-$output_name
 		echo "Workload done"
 
 		echo "mediaMicroservices experiment cleaned up."
@@ -420,7 +422,7 @@ run_benchmark(){
 		echo "Social-network app is ready to be experimented on."
 
 		echo "socialNetwork workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && ./workload-mixed.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/k8s-sn-wrk-mixed-exp$experiment-$server_type-t$t-c$c-d$d-R$R
+		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && ./workload-mixed.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/k8s-sn-wrk-mixed-$output_name
 		echo "Workload done"
 
 		# Stop the benchmark

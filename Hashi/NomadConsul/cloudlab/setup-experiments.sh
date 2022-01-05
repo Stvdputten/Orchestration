@@ -31,23 +31,28 @@ fi
 
 # Experiment parameters
 # Check if we use unlimited resources in the deployment files
+# 0 means true
+# 1 means false
 if [ -z "$unlimited" ]; then
-	# 0 means true
-	# 1 means false, limited deployment
-	export unlimited=1
+	# resources are unlimited
+	export unlimited=0
 fi
 
 if [ -z "$availability" ]; then
+	# master nodes consists of 3 nodes, cause of high availability
 	export availability=0
 fi
 
 if [ -z "$vertical" ]; then
+	# resources have not been increased
 	export vertical=1
 fi
 
 if [ -z "$horizontal" ]; then
-	export horizontal=0
+	# containers have not been scaled global/horizontal
+	export horizontal=1
 fi
+
 
 # This part checks the nodes params
 if [ -z "$ips" ]; then
@@ -67,13 +72,9 @@ if [ -z "$experiment" ]; then
 	export experiment=$experiment
 fi
 
-device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | head -n 1 | cut -d: -f1")
-ip_manager=$(ssh -n $manager "ip addr show $device | grep 'inet\b' | awk '{print \$2}' | cut -d/ -f1")
-
-# node 3
-node3=$(sed -n '4p' configs/ips)
-node3_hostname=$(ssh -n $node3 "hostname")
-node3_ip=$(ssh -n $node3 "ip -4 a show $device |  grep \"inet\b\" | awk '{ print \$2}' | cut -d/ -f1")
+# update the DSB after updating the files
+pssh -i -h $ips "cd DeathStarBench && git pull && git reset --hard origin/local" > /dev/null 2>&1
+ssh -n $remote "cd DeathStarBench && git reset --hard origin/local && git pull" > /dev/null 2>&1
 
 # check what type of server is used and set the correct path
 if echo $manager | cut -d@ -f2 | grep "amd" > /dev/null; then
@@ -82,14 +83,25 @@ elif echo $manager | cut -d@ -f2 | grep "ms" > /dev/null; then
 	server_type="m510"
 fi
 
-# update the DSB after updating the files
-pssh -i -h $ips "cd DeathStarBench && git reset --hard origin/local && git pull" > /dev/null 2>&1
-ssh -n $remote "cd DeathStarBench && git reset --hard origin/local && git pull" > /dev/null 2>&1
+# PARAMS ORCHESTRATOR WIDE
 
-# setup directories based on date
-# date=$(date "+%h:%mt%d-%m-%y")
+# setup directories based on date for the experiments
 dir_date=$(date "+%d-%m-%y")
 mkdir -p ./results/$dir_date
+
+# file params to output
+output_name=$server_type-exp$experiment-havail$availability-hori$horizontal-verti$vertical-infi$unlimited-t$t-c$c-d$d-R$R
+
+# return ip manager and network device
+device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | head -n 1 | cut -d: -f1")
+ip_manager=$(ssh -n $manager "ip addr show $device | grep 'inet\b' | awk '{print \$2}' | cut -d/ -f1")
+
+# PARAMS ORCHESTRATOR SPECIFIC
+
+# node 3
+node3=$(sed -n '4p' configs/ips)
+node3_hostname=$(ssh -n $node3 "hostname")
+node3_ip=$(ssh -n $node3 "ip -4 a show $device |  grep \"inet\b\" | awk '{ print \$2}' | cut -d/ -f1")
 
 # setup dns
 # https://www.linuxuprising.com/2020/07/ubuntu-how-to-free-up-port-53-used-by.html
@@ -147,21 +159,6 @@ run_benchmark(){
 			echo "Deploying $bench_name"
 			ssh $manager "cd DeathStarBench/$benchmark/nomad && nomad job run $nomad_job"
 
-			# # Check if deployment succeeded
-			# count=0
-			# ssh $manager 'line_n=$(nomad job status -evals hotel-reservation | awk "{ print $4}" | grep -n "Placed" | cut -d: -f1) && line_n_end=$((line_n+9)) && nomad job status -evals hotel-reservation | awk "{ print $4}" | sed -n $line_n,"$line_n_end"p' | grep 0
-			# while [ $? -eq 0 ]; do
-			# 	echo "waiting for nomad to be ready"
-			# 	count=$((count+1))
-			# 	sleep 10
-			# 	if [ $count -gt 10 ]; then
-			# 		echo "$benchmark deployment is stuck, redeploying"
-			# 		ssh $manager "cd DeathStarBench/$benchmark/nomad && nomad job stop -purge $bench_name"
-			# 		ssh $manager "cd DeathStarBench/$benchmark/nomad && nomad job run $nomad_job"
-			# 	fi
-			# 	ssh $manager 'line_n=$(nomad job status -evals hotel-reservation | awk "{ print $4}" | grep -n "Placed" | cut -d: -f1) && line_n_end=$((line_n+9)) && nomad job status -evals hotel-reservation | awk "{ print $4}" | sed -n $line_n,"$line_n_end"p' | grep 0
-			# done
-
 			echo "$benchmark app is ready to be experimented on."
 		else
 			echo "Benchmark already deployed"
@@ -172,16 +169,10 @@ run_benchmark(){
 		echo "The jaeger service is found on $nginx_ip"
 
 		echo "hotelReservation workloads are being run..."
-		# ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && export nginx_ip=$node3_ip && ./workload.sh" > ./results/$date/nomad-hr-wrk-mixed.txt
-		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && export nginx_ip=$node3_ip && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/nomad-hr-wrk-mixed-exp$experiment-$server_type-t$t-c$c-d$d-R$R
+		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && export nginx_ip=$node3_ip && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/nomad-hr-wrk-mixed-$output_name
 
 		echo "$benchmark results are in."
-		# Stop the benchmark
-		# ssh $manager "cd DeathStarBench/hotelReservation/nomad && nomad job stop hotel-reservation"
-		# ssh $manager "cd DeathStarBench/hotelReservation/nomad && nomad job stop hotel-reservation"
-		# exit 0
-
-		echo "hotelReservation experiment cleaned up."
+		echo "hotelReservation iteration done."
 
 	elif [ $benchmark == "mediaMicroservices" ]; then
 		echo "Deploying mediaMicroservices app"
@@ -246,7 +237,7 @@ run_benchmark(){
 		echo "The jaeger service is found on $nginx_ip"
 
 		echo "$benchmark workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && export nginx_ip=$node3_ip && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/nomad-mm-wrk-compose-exp$experiment-$server_type-t$t-c$c-d$d-R$R
+		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && export nginx_ip=$node3_ip && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/nomad-mm-wrk-compose-$output_name
 
 		# Stop the benchmark
 		# ssh $manager "cd DeathStarBench/mediaMicroservices/nomad && nomad job stop media-microservices"
@@ -314,13 +305,9 @@ run_benchmark(){
 		echo "The jaeger service is found on $nginx_ip"
 
 		echo "socialNetwork workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && export nginx_ip=$node3_ip && ./workload-mixed.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/nomad-sn-wrk-mixed-exp$experiment-$server_type-t$t-c$c-d$d-R$R
+		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && export nginx_ip=$node3_ip && ./workload-mixed.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/nomad-sn-wrk-mixed-$output_name
 
 		echo "socialNetwork results are in."
-
-		# Stop the benchmark
-		# ssh $manager "cd DeathStarBench/socialNetwork/nomad && nomad job stop social-network"
-
 		echo "SocialNetwork experiment cleaned up."
 		# exit 0
 	fi

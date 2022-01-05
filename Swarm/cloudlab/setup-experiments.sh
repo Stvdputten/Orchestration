@@ -12,13 +12,13 @@ do
 done
 
 if [ -z "$t" ] && [ -z "$c" ] && [ -z "$d" ] && [ -z "$R" ]; then
-	echo "-------------------------------------------------------";
-	echo "No params, using default settings of -t 4 -c 8 -d 30 -R 200";
-	echo "-------------------------------------------------------";
 	t=8
 	c=512
 	d=30
 	R=500
+	echo "-------------------------------------------------------";
+	echo "No params, using default settings of -t $t -c $c -d $d -R $R";
+	echo "-------------------------------------------------------";
 else
 	echo "-------------------------------------------------------";
 	echo "Experiments are run using the following parameters:";
@@ -31,22 +31,26 @@ fi
 
 # Experiment parameters
 # Check if we use unlimited resources in the deployment files
+# 0 means true
+# 1 means false
 if [ -z "$unlimited" ]; then
-	# 0 means true
-	# 1 means false, limited deployment
+	# resources are unlimited
 	export unlimited=0
 fi
 
 if [ -z "$availability" ]; then
+	# master nodes consists of 3 nodes, cause of high availability
 	export availability=0
 fi
 
 if [ -z "$vertical" ]; then
+	# resources have not been increased
 	export vertical=1
 fi
 
 if [ -z "$horizontal" ]; then
-	export horizontal=0
+	# containers have not been scaled global/horizontal
+	export horizontal=1
 fi
 
 
@@ -79,10 +83,20 @@ elif echo $manager | cut -d@ -f2 | grep "ms" > /dev/null; then
 	server_type="m510"
 fi
 
-# setup directories based on date
-# date=$(date "+%H:%MT%d-%m-%Y")
+# PARAMS ORCHESTRATOR WIDE
+
+# setup directories based on date for the experiments
 dir_date=$(date "+%d-%m-%y")
 mkdir -p ./results/$dir_date
+
+# file params to output
+output_name=$server_type-exp$experiment-havail$availability-hori$horizontal-verti$vertical-infi$unlimited-t$t-c$c-d$d-R$R
+
+# return ip manager and network device
+device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | head -n 1 | cut -d: -f1")
+ip_manager=$(ssh -n $manager "ip addr show $device | grep 'inet\b' | awk '{print \$2}' | cut -d/ -f1")
+
+# PARAMS ORCHESTRATOR SPECIFIC
 
 run_benchmark(){
 	if [ $benchmark == "hotelReservation" ]; then
@@ -131,7 +145,7 @@ run_benchmark(){
 		echo "hotelReservation app is ready to be experimented on."
 
 		echo "hotelReservation workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-hr-wrk-mixed-exp$experiment-$server_type-t$t-c$c-d$d-R$R
+		ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-hr-wrk-mixed-$output_name
 		echo "hotelReservation workloads done."
 
 		# Stop the benchmark
@@ -189,7 +203,7 @@ run_benchmark(){
 		echo "The jaeger service is found on $node_name_jaeger"
 
 		echo "mediaMicroservices workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-mm-wrk-compose-exp$experiment-$server_type-t$t-c$c-d$d-R$R
+		ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && export nginx_ip=$node_name_nginx && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-mm-wrk-compose-$output_name
 		echo "mediaMicroservices workloads done."
 
 		# Stop the benchmark
@@ -257,7 +271,7 @@ run_benchmark(){
 		# ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-home.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-home-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
 		# ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-user.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-user-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
 		# ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-compose.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-compose-$experiment-$server_type-t$t-c$c-d$d-R$R.txt
-		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-mixed.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-mixed-exp$experiment-$server_type-t$t-c$c-d$d-R$R
+		ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && export nginx_ip=$node_name_nginx && ./workload-mixed.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/swarm-sn-wrk-mixed-$output_name
 		echo "socialNetwork workloads done."
 
 		# Stop the benchmark
