@@ -18,7 +18,6 @@ if [ -z "$t" ] && [ -z "$c" ] && [ -z "$d" ] && [ -z "$R" ]; then
 	R=500
 	echo "-------------------------------------------------------";
 	echo "No params, using default settings of -t $t -c $c -d $d -R $R";
-	echo "-------------------------------------------------------";
 else
 	echo "-------------------------------------------------------";
 	echo "Experiments are run using the following parameters:";
@@ -26,7 +25,6 @@ else
 	echo "Connections: $c";
 	echo "Duration (seconds): $d";
 	echo "Req/sec: $R";
-	echo "-------------------------------------------------------";
 fi
 
 # Experiment parameters
@@ -71,6 +69,14 @@ if [ -z "$experiment" ]; then
 	experiment="free"
 	export experiment=$experiment
 fi
+
+echo "Running experiment $experiment";
+echo "Current benchmark is $benchmark"
+if [ $availability -eq 0 ]; then echo "Availability is on"; else echo "Availability is off"; fi
+if [ $horizontal -eq 0 ]; then echo "Horizontal is on"; else echo "Horizontal is off"; fi
+if [ $vertical -eq 0 ]; then echo "Vertical is on"; else echo "Vertical is off"; fi
+if [ $unlimited -eq 0 ]; then echo "UNLIMITED resources"; else echo "LIMITED resources"; fi
+echo "-------------------------------------------------------";
 
 # update the DSB after updating the files
 pssh -i -h $ips "cd DeathStarBench && git pull && git reset --hard origin/local" > /dev/null 2>&1
