@@ -93,6 +93,7 @@ fi
 
 # setup directories based on date for the experiments
 dir_date=$(date "+%d-%m-%y")
+dir_date="/$dir_date/$experiment"
 mkdir -p ./results/$dir_date
 
 # file params to output
@@ -127,8 +128,16 @@ run_benchmark(){
 					sleep 5
 					pssh -i -h $ips "sudo systemctl restart docker"
 					if [ $unlimited -eq 1 ]; then 
-						echo "Running hotel reservation with limited resources"
-						ssh $manager "cd DeathStarBench/hotelReservation && docker stack deploy -c docker-swarm-limited-resources.yml hotel-reservation"
+						elif [ $vertical -eq 0 ]; then 
+							echo "Running $bench_name with limited resources and vertical scaling"
+							ssh $manager "cd DeathStarBench/hotelReservation && docker stack deploy -c docker-swarm-limited-horizontal.yml hotel-reservation"
+						elif [ $horizontal -eq 0 ]; then 
+							echo "Running $bench_name with limited resources and horizontal scaling"
+							ssh $manager "cd DeathStarBench/hotelReservation && docker stack deploy -c docker-swarm-limited-vertical.yml hotel-reservation"
+						else
+							echo "Running $bench_name with limited resources"
+							ssh $manager "cd DeathStarBench/hotelReservation && docker stack deploy -c docker-swarm-limited-resources.yml hotel-reservation"
+						fi
 					elif [ $unlimited -eq 0 ]; then
 						echo "Running hotel reservation with unlimited resources"
 						ssh $manager "cd DeathStarBench/hotelReservation && docker stack deploy -c docker-compose-swarm-local.yml hotel-reservation"
@@ -181,8 +190,16 @@ run_benchmark(){
 					sleep 5
 					pssh -i -h $ips "sudo systemctl restart docker"
 					if [ $unlimited -eq 1 ]; then 
-						echo "Running media-microservices with limited resources"
-						ssh $manager "cd DeathStarBench/mediaMicroservices && docker stack deploy -c docker-swarm-limited-resources.yml media-microservices"
+						if [ $vertical -eq 0 ]; then 
+							echo "Running media-microservices with limited resources and vertical scaling"
+							ssh $manager "cd DeathStarBench/mediaMicroservices && docker stack deploy -c docker-swarm-limited-vertical.yml media-microservices"
+						elif [ $horizontal -eq 0 ]; then 
+							echo "Running media-microservices with limited resources and horizontal scaling"
+							ssh $manager "cd DeathStarBench/mediaMicroservices && docker stack deploy -c docker-swarm-limited-horizontal.yml media-microservices"
+						else
+							echo "Running media-microservices with limited resources"
+							ssh $manager "cd DeathStarBench/mediaMicroservices && docker stack deploy -c docker-swarm-limited-resources.yml media-microservices"
+						fi
 					elif [ $unlimited -eq 0 ]; then
 						echo "Running media-microservices with unlimited resources"
 						ssh $manager "cd DeathStarBench/mediaMicroservices && docker stack deploy -c docker-compose-swarm.yml media-microservices"
@@ -246,8 +263,16 @@ run_benchmark(){
 					sleep 5
 					pssh -i -h $ips "sudo systemctl restart docker"
 					if [ $unlimited -eq 1 ]; then 
-						echo "Running socialNetwork with limited resources"
-						ssh $manager "cd DeathStarBench/socialNetwork && docker stack deploy -c docker-swarm-limited-resources.yml social-network"
+						if [ $vertical -eq 0 ]; then 
+							echo "Running $bench_name with limited resources and vertical scaling"
+							ssh $manager "cd DeathStarBench/socialNetwork && docker stack deploy -c docker-swarm-limited-vertical.yml social-network"
+						elif [ $horizontal -eq 0 ]; then 
+							echo "Running $bench_name with limited resources and horizontal scaling"
+							ssh $manager "cd DeathStarBench/socialNetwork && docker stack deploy -c docker-swarm-limited-horizontal.yml social-network"
+						else
+							echo "Running $bench_name with limited resources"
+							ssh $manager "cd DeathStarBench/socialNetwork && docker stack deploy -c docker-swarm-limited-resources.yml social-network"
+						fi
 					elif [ $unlimited -eq 0 ]; then
 						echo "Running socialNetwork with unlimited resources"
 						ssh $manager "cd DeathStarBench/socialNetwork && docker stack deploy -c docker-compose-swarm-jaeger.yml social-network"

@@ -93,6 +93,7 @@ fi
 
 # setup directories based on date for the experiments
 dir_date=$(date "+%d-%m-%y")
+dir_date="/$dir_date/$experiment"
 mkdir -p ./results/$dir_date
 
 # file params to output
@@ -136,8 +137,16 @@ run_benchmark(){
 
 		# Use the correct deployment files
 		if [ $unlimited -eq 1 ]; then
-			nomad_job="$bench_name-limited-resources.nomad"
-			echo "Running hotel-reservation with limited resources"
+			if [ $vertical -eq 0 ]; then
+				echo "Running $bench_name with limited resources and vertical scaling"
+				nomad_job="$bench_name-limited-vertical.nomad"
+			elif [ $horizontal -eq 0 ]; then
+				echo "Running $bench_name with limited resources and horizontal scaling"
+				nomad_job="$bench_name-limited-horizontal.nomad"
+			else
+				echo "Running $bench_name with limited resources"
+				nomad_job="$bench_name-limited-resources.nomad"
+			fi
 		elif [ $unlimited -eq 0 ]; then
 			nomad_job="$bench_name.nomad"
 			echo "Running hotel-reservation with unlimited resources"
@@ -195,8 +204,16 @@ run_benchmark(){
 
 			# Use the correct deployment files
 			if [ $unlimited -eq 1 ]; then
-				nomad_job="$bench_name-limited-resources.nomad"
-				echo "Running media-microservices with limited resources"
+				if [ $vertical -eq 0 ]; then
+					echo "Running $bench_name with limited resources and vertical scaling"
+					nomad_job="$bench_name-limited-vertical.nomad"
+				elif [ $horizontal -eq 0 ]; then
+					echo "Running $bench_name with limited resources and horizontal scaling"
+					nomad_job="$bench_name-limited-horizontal.nomad"
+				else
+					echo "Running $bench_name with limited resources"
+					nomad_job="$bench_name-limited-resources.nomad"
+				fi
 			elif [ $unlimited -eq 0 ]; then
 				nomad_job="$bench_name.nomad"
 				echo "Running media-microservices with unlimited resources"
@@ -265,8 +282,16 @@ run_benchmark(){
 
 			# Use the correct deployment files
 			if [ $unlimited -eq 1 ]; then
-				nomad_job="$bench_name-limited-resources.nomad"
-				echo "Running social-network with limited resources"
+				if [ $vertical -eq 0 ]; then
+					echo "Running $bench_name with limited resources and vertical scaling"
+					nomad_job="$bench_name-limited-vertical.nomad"
+				elif [ $horizontal -eq 0 ]; then
+					echo "Running $bench_name with limited resources and horizontal scaling"
+					nomad_job="$bench_name-limited-horizontal.nomad"
+				else
+					echo "Running $bench_name with limited resources"
+					nomad_job="$bench_name-limited-resources.nomad"
+				fi
 			elif [ $unlimited -eq 0 ]; then
 				nomad_job="$bench_name.nomad"
 				echo "Running social-network with unlimited resources"

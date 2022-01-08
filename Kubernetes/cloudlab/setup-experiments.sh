@@ -93,6 +93,7 @@ fi
 
 # setup directories based on date for the experiments
 dir_date=$(date "+%d-%m-%y")
+dir_date="/$dir_date/$experiment"
 mkdir -p ./results/$dir_date
 
 # file params to output
@@ -134,8 +135,15 @@ run_benchmark(){
 			# load the correct deployment files
 			# ssh -n $manager "rm  $k8_dir/*.yaml"
 			if [ $unlimited -eq 1 ]; then
-				echo "Running hotel-reservation with limited resources"
-				ssh -n $manager "cp -r $k8_dir/limited/* $k8_dir"
+				if [ $vertical -eq 0 ]; then
+					echo "Running $bench_name with limited resources and vertical scaling"
+					ssh -n $manager "cp -r $k8_dir/limited-vertical/* $k8_dir"
+				elif [ $horizontal -eq 0 ]; then
+					echo "Running $bench_name with limited resources and horizontal scaling"
+					ssh -n $manager "cp -r $k8_dir/limited-horizontal/* $k8_dir"
+				else
+					echo "Running $bench_name with limited resources"
+					ssh -n $manager "cp -r $k8_dir/limited/* $k8_dir"
 			elif [ $unlimited -eq 0 ]; then
 				echo "Running hotel-reservation with unlimited resources"
 				ssh -n $manager "cp -r $k8_dir/unlimited/* $k8_dir"
@@ -263,9 +271,16 @@ run_benchmark(){
 			# load the correct deployment files
 			# ssh -n $manager "rm  $k8_dir/*.yaml"
 			if [ $unlimited -eq 1 ]; then
-				echo "Running media-microservices with limited resources"
-				ssh -n $manager "cp -r $k8_dir/limited/* $k8_dir"
-
+				if [ $vertical -eq 0 ]; then
+					echo "Running $bench_name with limited resources and vertical scaling"
+					ssh -n $manager "cp -r $k8_dir/limited-vertical/* $k8_dir"
+				elif [ $horizontal -eq 0 ]; then
+					echo "Running $bench_name with limited resources and horizontal scaling"
+					ssh -n $manager "cp -r $k8_dir/limited-horizontal/* $k8_dir"
+				else
+					echo "Running $bench_name with limited resources"
+					ssh -n $manager "cp -r $k8_dir/limited/* $k8_dir"
+				fi
 			elif [ $unlimited -eq 0 ]; then
 				echo "Running media-microservices with unlimited resources"
 				ssh -n $manager "cp -r $k8_dir/unlimited/* $k8_dir"
@@ -362,9 +377,16 @@ run_benchmark(){
 			# load the correct deployment files
 			# ssh -n $manager "rm  $k8_dir/*.yaml"
 			if [ $unlimited -eq 1 ]; then
-				echo "Running social-network with limited resources"
-				ssh -n $manager "cp -r $k8_dir/limited/* $k8_dir"
-
+				if [ $vertical -eq 0 ]; then
+					echo "Running $bench_name with limited resources and vertical scaling"
+					ssh -n $manager "cp -r $k8_dir/limited-vertical/* $k8_dir"
+				elif [ $horizontal -eq 0 ]; then
+					echo "Running $bench_name with limited resources and horizontal scaling"
+					ssh -n $manager "cp -r $k8_dir/limited-horizontal/* $k8_dir"
+				else
+					echo "Running $bench_name with limited resources"
+					ssh -n $manager "cp -r $k8_dir/limited/* $k8_dir"
+				fi
 			elif [ $unlimited -eq 0 ]; then
 				echo "Running social-network with unlimited resources"
 				ssh -n $manager "cp -r $k8_dir/unlimited/* $k8_dir"
