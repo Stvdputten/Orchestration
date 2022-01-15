@@ -62,9 +62,9 @@ ssh -n $remote "sudo luarocks install luasocket"
 ssh -n $remote "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
 
 #  Check if wrk is exists
-ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && make clean && make"
-ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && make clean && make"
-ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && make clean && make"
+ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && make clean && make" > /dev/null
+ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && make clean && make" > /dev/null
+ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && make clean && make" > /dev/null
 
 # Send ssh-key to remote cluster
 ssh -n "$remote" "ssh-keygen -t rsa -f /tmp/sshkey -q -N '' <<< $'\ny' >/dev/null 2>&1"
