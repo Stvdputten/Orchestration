@@ -13,7 +13,7 @@ export remote=$(head -n 1 configs/remote)
 
 # experiment params
 export experiment=$(echo "$0" | cut -d'/' -f2 | cut -d'_' -f1)
-export availability=0
+export availability=1
 export unlimited=1
 export horizontal=1
 export vertical=1
@@ -25,10 +25,7 @@ clean_up(){
 	ssh $manager "nomad job stop -purge social-network" > /dev/null
 }
 
-# sleep 5
-
-# clean_up
-
+clean_up
 unset benchmark
 for benchmark in socialNetwork; do
 	echo "Running the baseline tests stress $experiment for $benchmark"
@@ -68,9 +65,6 @@ for benchmark in hotelReservation; do
 	done
 done
 
-
 echo "Experiment $experiment has been run and is done!"
 
 exit 0
-# ssh -n "$manager" "cd /users/stvdp/DeathStarBench/socialNetwork/kubernetes && yes | ./scripts/zap.sh" > /dev/null 2>&1
-# ssh -n "$manager" "cd /users/stvdp/DeathStarBench/mediaMicroservices/kubernetes && yes | ./scripts/zap.sh" > /dev/null 2>&1
