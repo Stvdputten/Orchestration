@@ -14,7 +14,7 @@ export remote=$(head -n 1 configs/remote)
 # experiment params
 export experiment=$(echo "$0" | cut -d'/' -f2 | cut -d'_' -f1)
 export availability=0
-export unlimited=0
+export unlimited=1
 export horizontal=1
 export vertical=1
 

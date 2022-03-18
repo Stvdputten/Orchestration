@@ -45,15 +45,6 @@ done
 # Disable ufw
 pssh -i -h $ips "sudo ufw disable"
 
-# https://docs.docker.com/engine/swarm/swarm-tutorial/
-# Swarm
-# pssh -i -h $ips "sudo ufw allow 7946/udp"
-# pssh -i -h $ips "sudo ufw allow 2377,7946,4789/tcp"
-
-# prometheus, 8000 is the changed value of cadvisor
-# pssh -i -h $ips "sudo ufw allow 9323,3000,9090,8080,8000,9100,9323/tcp"
-# pssh -i -h $ips "sudo ufw allow 9323,3000,9090,8080,8000,9100,9323/udp"
-
 # Ensure daemon.json
 pssh -i -h $ips 'sudo rm /etc/docker/daemon.json' > /dev/null 2>&1
 pssh -i -h $ips "sudo mkdir -p /etc/systemd/system/docker.service.d" /dev/null 2>&1

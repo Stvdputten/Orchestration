@@ -5,14 +5,21 @@ if [ -z "$ips" ]; then
 	ips="configs/ips"
 	export ips=$ips
 fi
+
 if [ -z "$manager" ]; then
 	manager=$(head -n 1 configs/ips)
 	export manager=$manager
 fi
+
 if [ -z "$remote" ]; then
 	remote=$(head -n 1 configs/remote)
 	export remote=$remote
 fi
+
+echo $ips
+echo $manager
+echo $remote
+echo $availability
 
 echo "Setup Tester"
 echo "Starting remote env start-up scripts"
@@ -30,13 +37,13 @@ ssh -n $remote "sudo apt-get update && sudo apt-get install -y vim git vim git a
 
 # Install docker
 echo "Docker Install Beginning..."
-ssh -n $remote "curl -fsSL https://get.docker.com -o get-docker.sh"
+ssh -n $remote "curl -fsSL https://get.docker.com -o get-docker.sh" > /dev/null 2>&1
 ssh -n $remote "test -f 'get-docker.sh'"
 while [ ! $? -eq  0 ]; do
-  ssh -n $remote "curl -fsSL https://get.docker.com -o get-docker.sh"
+  ssh -n $remote "curl -fsSL https://get.docker.com -o get-docker.sh" > /dev/null 2>&1
   ssh -n $remote "test -f 'get-docker.sh'"
 done
-ssh -n $remote "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop"
+ssh -n $remote "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop" > /dev/null 2>&1
 
 # Configure Docker to be run as the user
 ssh -n $remote 'sudo usermod -aG docker $USER'
@@ -62,15 +69,16 @@ ssh -n $remote "sudo luarocks install luasocket"
 ssh -n $remote "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
 
 #  Check if wrk is exists
-ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && make clean && make"
-ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && make clean && make"
-ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && make clean && make"
+ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && make clean && make" > /dev/null 2>&1
+ssh -n $remote "cd DeathStarBench/mediaMicroservices/wrk2 && make clean && make" > /dev/null 2>&1
+ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && make clean && make" > /dev/null 2>&1
 
 # Send ssh-key to remote cluster
 ssh -n $remote "ssh-keygen -t rsa -f /tmp/sshkey -q -N '' <<< $'\ny' >/dev/null 2>&1"
 pubkey=$(ssh -n "$remote" "cat /tmp/sshkey.pub")
 pssh -i -h $ips "echo $pubkey >> /users/stvdp/.ssh/authorized_keys"
-# TODO FIX broken pip error
+# # TODO FIX broken pip error
+
 # pssh -i -h $ips "cat ~/.ssh/authorized_keys | grep $pubkey > /dev/null 2>&1" 
 # while [ ! $? -eq  0 ]; do
 #   echo "Waiting for ssh-key to be installed"

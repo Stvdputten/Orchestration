@@ -6,5 +6,5 @@ echo "Running the baseline tests for all benchmarks"
 for remote in $(cat configs/remote); do
 	export remote=$remote
 	echo "remote: $remote"
-	./setup-tester.sh 
+	./setup-tester.sh  &
 done

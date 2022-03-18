@@ -16,57 +16,76 @@ if [ -z "$manager" ]; then
   export manager=$manager
 fi
 
+if [ -z "$availability" ]; then
+  export availability=0
+fi
+
+# device="eno33"
+# device2="ens1f0"
+
 # device="eno1"
+# device2="eno1d1"
 device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | head -n 1 | cut -d: -f1")
 ip_manager=$(ssh -n $manager "ip addr show $device | grep 'inet\b' | awk '{print \$2}' | cut -d/ -f1")
+# ip_manager_int=$(ssh -n $manager "ip addr show $device2 | grep 'inet\b' | awk '{print \$2}' | cut -d/ -f1")
 
 managers=(${!MANAGER_@})
 workers=(${!WORKER_@})
 
-# echo "$ip_manager"
-# echo $managers
-# echo ${!managers[0]}
-ssh $manager "sudo kubeadm init --control-plane-endpoint='$ip_manager' --apiserver-advertise-address='$ip_manager' --upload-certs --apiserver-cert-extra-sans='$ip_manager' --pod-network-cidr=10.244.0.0/16" > configs/logs.txt
-ssh $manager 'mkdir -p $HOME/.kube && sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config'
+echo $ip_manager
+echo $ip_manager_int
 
 # SETUP first control plane node
+# ssh $manager "sudo kubeadm init --control-plane-endpoint='$ip_manager_int' --apiserver-advertise-address='$ip_manager_int' --upload-certs --apiserver-cert-extra-sans='$ip_manager_int' --pod-network-cidr=10.244.0.0/16" > configs/logs.txt
+ssh $manager "sudo kubeadm init --control-plane-endpoint='$ip_manager' --apiserver-advertise-address='$ip_manager' --upload-certs --apiserver-cert-extra-sans='$ip_manager' --pod-network-cidr=10.244.0.0/16" > configs/logs.txt
+sleep 10
+ssh $manager 'mkdir -p $HOME/.kube && sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config'
 ssh $manager 'kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml'
-# # Untaint the nodes to make it possible to deploy apps on the master nodes
 
-
-# # kubeadm join 145.100.58.221:6443 --token 3gvp72.t5zc882ufn97rdvm \
-# #         --discovery-token-ca-cert-hash sha256:ff14d5c7774df238b9e244d5efd69bf70f5ba66d3f3284869b4c61b71c2208ea \
-# #         --control-plane --certificate-key 561b97142e6ad0674f438585c12ae29d576034214576a5b949c98a116400beb2
+# clean up kubadm reset
+# sudo iptables -F && sudo iptables -t nat -F && sudo iptables -t mangle -F && sudo iptables -X
+# sudo rm -rf /etc/cni/net.d
+# check internal ip addres
+# kubectl get nodes -o wide
+# pssh -i -h $ips "sudo iptables -F && sudo iptables -t nat -F && sudo iptables -t mangle -F && sudo iptables -X"
+# pssh -i -h $ips "sudo rm -rf /etc/cni/net.d"
 
 add_manager=$(cat configs/logs.txt | grep "\-\-certificate-key")
-# echo "The manager control plane stuff is: $add_manager"
-join=$(ssh $manager 'kubeadm token create --print-join-command')
-# echo "$join $add_manager"
+join=$(ssh $manager 'kubeadm token create --print-join-command') 
 
-# Can be done parallel, $command & , but might be preferable to do it sequentially
-echo "Setup control-plane"
-for manager in ${managers[@]:1}
-do
-    echo "${!manager} joining the cluster"
-    ssh -n "${!manager}" "sudo $join $add_manager" > /dev/null 2>&1
-    ssh -n "${!manager}" 'mkdir -p $HOME/.kube && sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config' > /dev/null 2>&1
-    sleep 5
-done
+# echo $availability
 
-echo "Setup worker nodes"
-for worker in ${workers[@]}
-do
-    echo "${!worker} joining the cluster"
-    # indirect parameter expansion
-    ssh -n "${!worker}" "sudo $join" > /dev/null 2>&1
-    sleep 2
-done
+if [ $availability -eq 0 ]; then
+    # Can be done parallel, $command & , but might be preferable to do it sequentially
+    echo "Setup control-plane"
+    for manager in ${managers[@]:1}
+    do
+        echo "${!manager} joining the cluster"
+        # ssh -n "${!manager}" "sudo $join $add_manager" > /dev/null 2>&1
+        ssh -n "${!manager}" "sudo $join $add_manager" 
+        # ssh -n "${!manager}" 'mkdir -p $HOME/.kube && sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config' > /dev/null 2>&1
+        ssh -n "${!manager}" 'mkdir -p $HOME/.kube && sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config' 
+        sleep 5
+    done
 
-# echo "Copy Kubernetes configs"
-# https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/ 
-# setup k8s access on local machine
-# scp $manager:'$HOME/.kube/config' "$HOME/.kube/cloudlab_config_k8"
-# export KUBECONFIG="$HOME/.kube/config" 
-# export KUBECONFIG="$HOME/.kube/cloudlab_config_k8:$KUBECONFIG"
+    echo "Setup worker nodes"
+    for worker in ${workers[@]}
+    do
+        echo "${!worker} joining the cluster"
+        # indirect parameter expansion
+        # ssh -n "${!worker}" "sudo $join" > /dev/null 2>&1
+        ssh -n "${!worker}" "sudo $join" 
+        sleep 2
+    done
+elif [ $availability -eq 1 ]; then
+    echo "Setup worker nodes"
+    for worker in ${workers[@]}
+    do
+        echo "${!worker} joining the cluster"
+        # indirect parameter expansion
+        ssh -n "${!worker}" "sudo $join" > /dev/null 2>&1
+        sleep 2
+    done
+fi
 
 echo "Kubernetes setup is done."

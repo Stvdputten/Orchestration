@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
 
 # ips="$HOME/.pssh_hosts_files_hpc_swarm"
-ips="configs/ips"
+if [ -z "$ips" ]; then
+	ips="configs/ips"
+	export ips=$ips
+fi
+if [ -z "$manager" ]; then
+	manager=$(head -n 1 configs/ips)
+	export manager=$manager
+fi
+if [ -z "$remote" ]; then
+	remote=$(head -n 1 configs/remote)
+	export remote=$remote
+fi
 
 # OLD Make sure prometheus isn't installed in home directory
 # pssh -i -h $ips "rm -rf prometheus"
@@ -11,7 +22,6 @@ ips="configs/ips"
 pssh -i -h $ips "rm -rf swarmprom"
 pssh -i -h $ips "git clone https://github.com/stefanprodan/swarmprom.git "
 
-manager="$(head -n 1 'configs/ips')"
 echo "First monitoring"
 ssh -n $manager "sudo ufw allow 5001"
 ssh -n $manager "docker stack rm monitoring"

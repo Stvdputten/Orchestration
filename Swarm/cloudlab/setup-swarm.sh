@@ -19,8 +19,10 @@ fi
 if [ -z "$availability" ]; then
 	export availability=0
 fi
+
 # Make sure correct network interface is being used
-device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | cut -d: -f1")
+# device=$(ssh $manager "ip link show | grep '2: ' | awk '{ print \$2}' | cut -d: -f1")
+device="ens1f0"
 # echo $device
 
 count=1
@@ -60,14 +62,12 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 			result=$(ssh -n $line "ip addr show $device | grep 'inet\b' | awk '{print $2}' | cut -d/ -f1")
 			ip=$(echo $result | awk '{print $2}')
 			ssh -n $line "docker swarm init --advertise-addr $ip"
-			join_manager=$(ssh -n $line "docker swarm join-token manager | grep 'docker swarm'")
 			join_worker=$(ssh -n $line "docker swarm join-token worker | grep 'docker swarm'")
 			# echo $join_manager
 			# echo $join_worker
 			echo "Commands are ready"
 		fi
 	else
-
 		echo "Something went wrong with the param availability"
 		exit 1
 	fi

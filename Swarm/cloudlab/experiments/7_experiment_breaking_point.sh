@@ -7,14 +7,14 @@ echo "Experiment to see if we correctly identified the breaking points of the di
 cd $(dirname $0)/..
 
 # node params
-export ips="configs/ips"
-export manager=$(head -n 1 configs/ips)
-export remote=$(head -n 1 configs/remote)
+export ips="configs/ips2"
+export manager=$(head -n 1 configs/ips2)
+export remote=$(head -n 1 configs/remote2)
 
 # experiment params
 export experiment=$(echo "$0" | cut -d'/' -f2 | cut -d'_' -f1)
 export availability=0
-export unlimited=0
+export unlimited=1
 export horizontal=1
 export vertical=1
 
@@ -32,43 +32,29 @@ ssh $manager "docker stack rm hotel-reservation" > /dev/null 2>&1
 
 # Check if the requests influence the latency with different connections and max threads of tester
 # Shows the breaking point of social network is not that high actually, the throughput bottlenecks around 2000 RPS
+
+# 5 jan added 20000 to just see if it can break with unlimited
+
 unset benchmark
-for benchmark in socialNetwork mediaMicroservices; do
-	echo "Running the baseline tests stress 5 for $benchmark"
+for benchmark in socialNetwork ; do
 	export benchmark=$benchmark
-	# for requests in 200 500 1000 1500 2000 2500 3000; do
-	for requests in 3500 4000 5000 6000 7000; do
+	echo "Running the baseline tests stress $experiment for $benchmark"
+	for requests in 1500 2000 2500 3000 4000; do
 		for connections in 512; do
-			for threads in 8; do
+			for threads in 4; do
 				./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests
 			done
 		done
 	done
 done
 
-# Breaking hotelreservation takes a bit of an effort
-# unset benchmark
-# for benchmark in hotelReservation; do
-# 	echo "Running the baseline tests stress 5 for $benchmark"
-# 	export benchmark=$benchmark
-# 	# for requests in 200 500 1000 1500 2000 2500 3000; do
-# 	# for requests in 8000 9000 10000 11000; do
-# 	for requests in 8000 9000 10000 11000; do
-# 		for connections in 512; do
-# 			for threads in 8; do
-# 				./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests
-# 			done
-# 		done
-# 	done
-# done
-
 unset benchmark
-for benchmark in hotelReservation; do
-	echo "Running the baseline tests stress 5 for $benchmark"
+for benchmark in mediaMicroservices; do
 	export benchmark=$benchmark
-	for requests in 3500 4000 5000 6000 7000; do
+	echo "Running the baseline tests stress $experiment for $benchmark"
+	for requests in 3000 4000 5000 6000; do
 		for connections in 512; do
-			for threads in 8; do
+			for threads in 4; do
 				./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests
 			done
 		done
@@ -77,13 +63,17 @@ done
 
 unset benchmark
 for benchmark in hotelReservation; do
-	echo "Running the baseline tests stress 5 for $benchmark"
 	export benchmark=$benchmark
-	for requests in 8000 9000 10000 11000 12000 13000 14000; do
+	for requests in 12000 14000 16000 18000 20000 22000 24000 26000; do
 		for connections in 512; do
-			for threads in 8; do
+			for threads in 4; do
 				./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests
 			done
 		done
 	done
 done
+
+# Conclusion
+# Seems that sn breaks the quickest, with around 2500, so tart a bit lower aorund 2000
+# MM can take around 4000 requests, so start a bit lower 3000
+# HR can take a lot even around 16k, but increasing it more should give it a noticeable amount of latency, so start around 14k

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # WHAT THIS EXPERIMENT IS ABOUT
-echo "Experiments to see if our expectation of 16 cores breaking the system simply because of the amount of cores on the client"
+echo "Experiments to see if our expectation of 16 cores breaking the system simply because of the amount of cores on the client and connections, conclude if 8 or 16 both perform similar to 4"
 
 # Run from the dir above
 cd $(dirname $0)/..
@@ -14,7 +14,7 @@ export remote=$(head -n 1 configs/remote)
 # experiment params
 export experiment=$(echo "$0" | cut -d'/' -f2 | cut -d'_' -f1)
 export availability=0
-export unlimited=0
+export unlimited=1
 export horizontal=1
 export vertical=1
 
@@ -33,13 +33,17 @@ ssh $manager "docker stack rm hotel-reservation" > /dev/null 2>&1
 # Shows the breaking point of social network is not that high actually, the throughput bottlenecks around 2000 RPS
 unset benchmark
 for benchmark in socialNetwork mediaMicroservices hotelReservation; do
-	echo "Running the baseline tests stress 5 for $benchmark"
+	echo "Running the baseline tests stress $experiment for $benchmark"
 	export benchmark=$benchmark
-	for requests in 200 500 1000 1500 2000 2500 3000 4000 5000 6000; do
-		for connections in 1024; do
-			for threads in 16; do
+	for requests in 1500 2000 2500 3000 3500; do
+		for connections in 512 1024; do
+			for threads in 8 16; do
 				./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests
 			done
 		done
 	done
 done
+
+
+# Conclusion
+# It seems that having 16 cores is bad, and having too much open connection is also easily overloading the benchmarks which seems mean 512 is the limit and should be below 16 and maybe 8, that why we choose 4

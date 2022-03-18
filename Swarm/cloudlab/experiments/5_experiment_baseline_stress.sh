@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 
 # WHAT THIS EXPERIMENT IS ABOUT
-echo "Experiments with our chosen initial params and see if the benchmarks break already the range of 200-3000"
+echo "Experiments with our chosen initial params and see if the benchmarks break already the range of 2000-3000"
 
 # Run from the dir above
 cd $(dirname $0)/..
 
 # node params
-export ips="configs/ips"
-export manager=$(head -n 1 configs/ips)
-export remote=$(head -n 1 configs/remote)
+export ips="configs/ips2"
+export manager=$(head -n 1 configs/ips2)
+export remote=$(head -n 1 configs/remote2)
 
 # experiment params
 export experiment=$(echo "$0" | cut -d'/' -f2 | cut -d'_' -f1)
 export availability=0
-export unlimited=0
+export unlimited=1
 export horizontal=1
 export vertical=1
 
@@ -37,14 +37,18 @@ ssh $manager "docker stack rm hotel-reservation" > /dev/null 2>&1
 # Shows the breaking point of media microservices is around the throughput bottlenecks around 19000 RPS
 unset benchmark
 for benchmark in socialNetwork mediaMicroservices hotelReservation; do
-	echo "Running the baseline tests stress 5 for $benchmark"
+	echo "Running the baseline tests stress $experiment for $benchmark"
 	export benchmark=$benchmark
-	# for requests in 2500 3000 3500 4000 5000 6000; do
-	for requests in 200 500 1000 1500 2000 2500 3000; do
+	for requests in 2500 3000 3500 4000 5000 6000; do
+	# for requests in 200 500 1000 1500 2000 2500 3000; do
 		for connections in 512; do
-			for threads in 8; do
+			for threads in 4; do
 				./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests
 			done
 		done
 	done
 done
+
+# Conclusion	
+# Sn and MM break 2500 > and 4000 >
+# hr stil handles 6000

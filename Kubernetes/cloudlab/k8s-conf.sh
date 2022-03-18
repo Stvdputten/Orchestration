@@ -57,7 +57,7 @@ pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo a
 # # check
 pssh -i -h $ips "kubectl version --client && kubeadm version"
 while [ $? -ne 0 ]; do
-    echo "Kubernetes installation failed."
+    echo "Kubernetes installation."
 
     if  ! pssh -i -h $ips "test -f /etc/apt/sources.list.d/kubernetes.list"; then
         pssh -i -h $ips "sudo rm /etc/apt/sources.list.d/kubernetes.list"
@@ -80,7 +80,7 @@ done
 
 pssh -i -h $ips "kubectl version --client && kubeadm version"
 if [ $? -ne 0 ]; then
-    echo "Kubernetes installation failed."
+    echo "Kubernetes failed."
     exit 1
 fi
 

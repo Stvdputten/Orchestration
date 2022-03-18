@@ -352,9 +352,9 @@ run_benchmark(){
 
 
 			# Load the dataset 
-			if [ $horizontal - eq 0 ]; then
+			if [ $horizontal -eq 0 ]; then
 				ssh $node3 "cd DeathStarBench/socialNetwork/ && python3 scripts/init_social_graph.py" | grep Failed | wc -l
-				while [ $? -neq 0 ]; do
+				while [ $? -ne 0 ]; do
 					ssh $node3 "cd DeathStarBench/socialNetwork/ && python3 scripts/init_social_graph.py" | grep Failed | wc -l
 				done
 			elif [ $horizontal -eq 1 ]; then

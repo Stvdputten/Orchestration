@@ -14,7 +14,7 @@ export remote=$(head -n 1 configs/remote)
 # experiment params
 export experiment=$(echo "$0" | cut -d'/' -f2 | cut -d'_' -f1)
 export availability=0
-export unlimited=0
+export unlimited=1
 export horizontal=1
 export vertical=1
 
@@ -33,13 +33,26 @@ ssh $manager "docker stack rm hotel-reservation" > /dev/null 2>&1
 # Check if the requests influence the latency with different connections and max threads of tester
 # Shows the breaking point of social network is not that high actually, the throughput bottlenecks around 2000 RPS
 unset benchmark
-for benchmark in socialNetwork mediaMicroservices; do
-	echo "Running the baseline tests stress 5 for $benchmark"
+for benchmark in socialNetwork; do
 	export benchmark=$benchmark
-	# for requests in 200 500 1000 1500 2000 2500 3000; do
-	for requests in 2000 2500 3500 4000 5000 6000 7000; do
+	echo "Running the baseline tests stress $experiment for $benchmark"
+	for requests in 1500 2000 2500 3000 4000; do
 		for connections in 512; do
-			for threads in 8; do
+			for threads in 4; do
+				sleep 60
+				./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests
+			done
+		done
+	done
+done
+
+unset benchmark
+for benchmark in mediaMicroservices; do
+	export benchmark=$benchmark
+	echo "Running the baseline tests stress $experiment for $benchmark"
+	for requests in 2500 3000 4000 5000 6000; do
+		for connections in 512; do
+			for threads in 4; do
 				sleep 60
 				./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests
 			done
@@ -51,14 +64,17 @@ done
 # Shows the breaking point of social network is not that high actually, the throughput bottlenecks around 2000 RPS
 unset benchmark
 for benchmark in hotelReservation; do
-	echo "Running the baseline tests stress 5 for $benchmark"
 	export benchmark=$benchmark
-	for requests in 7000 8000 9000 10000 11000 12000 13000 14000 15000 16000; do
+	echo "Running the baseline tests stress $experiment for $benchmark"
+	for requests in 12000 14000 16000 18000 20000; do
 		for connections in 512; do
-			for threads in 8; do
+			for threads in 4; do
 				sleep 60
 				./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests
 			done
 		done
 	done
 done
+
+# Conclusion
+# Can't really say but it seems that it still breaks similarly

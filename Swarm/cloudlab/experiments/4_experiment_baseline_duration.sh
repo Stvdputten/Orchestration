@@ -14,7 +14,7 @@ export remote=$(head -n 1 configs/remote)
 # experiment params
 export experiment=$(echo "$0" | cut -d'/' -f2 | cut -d'_' -f1)
 export availability=0
-export unlimited=0
+export unlimited=1
 export horizontal=1
 export vertical=1
 
@@ -25,9 +25,13 @@ ssh $manager "docker stack rm hotel-reservation" > /dev/null 2>&1
 
 unset benchmark
 for benchmark in socialNetwork mediaMicroservices hotelReservation; do
-	echo "Running the baseline tests for $benchmark"
+	echo "Running the baseline tests $experiment for $benchmark"
 	export benchmark=$benchmark
 	for duration in 30 60 150; do
-		./setup-experiments.sh -t 8 -c 512 -d $duration -R 500 
+		./setup-experiments.sh -t 4 -c 512 -d $duration -R 500 
 	done
 done
+
+
+# Conclusion
+# Duration shows similar results
