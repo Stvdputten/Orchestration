@@ -1,0 +1,4 @@
+Latency,Requests,Throughput,Measured_Throughput,Baseline,Orchestrator,Benchmark,Infinite,Exp,Availability,Horizontal,Vertical,Threads,Connections,Duration,Mean,Max,StdDev,ReqSec
+12.7,200.0,5993.0,3989,0,swarm,hr,0,exp0,0,1,1,4,8,30,4.074,27.856,2.892,199.73
+9.29,200.0,5993.0,3990,0,swarm,mm,0,exp0,0,1,1,4,8,30,4.15,28.336,1.433,199.75
+7.97,200.0,5993.0,3989,0,swarm,sn,0,exp0,0,1,1,4,8,30,2.55,10.344,1.563,199.72
