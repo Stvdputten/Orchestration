@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 if [ -z "$ips" ]; then
 	ips="configs/ips"
 	export ips=$ips

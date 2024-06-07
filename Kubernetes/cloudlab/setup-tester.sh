@@ -15,7 +15,7 @@ if [ -z "$remote" ]; then
 fi
 
 if [ -z "$kubectl_version" ]; then
-  kubectl_version="1.23.1-00"
+  kubectl_version="1.24"
   export kubectl_version=$kubectl_version
 fi
 
@@ -31,7 +31,8 @@ while [ ! $? -eq 0 ]; do
   sleep 10
   ssh -n $remote "sudo lsof /var/lib/dpkg/lock-frontend | grep 'SUCCESS'" 
 done
-ssh -n $remote "sudo apt-get update && sudo apt-get install -y vim git vim git apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop"
+ssh -n "$remote" "sudo rm /etc/apt/sources.list.d/kubernetes.list" 
+ssh -n $remote "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https gpg ca-certificates curl gnupg-agent software-properties-common htop"
 
 # Install docker
 echo "Docker Install Beginning..."
@@ -41,7 +42,7 @@ while [ ! $? -eq  0 ]; do
   ssh -n $remote "curl -fsSL https://get.docker.com -o get-docker.sh"
   ssh -n $remote "test -f 'get-docker.sh'"
 done
-ssh -n $remote "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop"
+ssh -n $remote "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gpg gnupg-agent software-properties-common htop"
 
 # Configure Docker to be run as the user
 ssh -n $remote 'sudo usermod -aG docker $USER'
@@ -64,7 +65,8 @@ ssh -n $remote "pip install --no-input asyncio aiohttp"
 ssh -n $remote "sudo luarocks install luasocket"
 
 # Download the repo
-ssh -n $remote "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
+# ssh -n $remote "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
+ssh -n $remote "git clone https://github.com/Stvdputten/DeathStarBench"
 
 #  Check if wrk is exists
 ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && make clean && make"
@@ -76,12 +78,16 @@ ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && make clean && make"
 ssh -n "$remote" "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common"
 wait
 ssh -n "$remote" "sudo rm /etc/apt/sources.list.d/kubernetes.list" 
+
+#TODO add versions parameters
+ssh -n "$remote" "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common"
 wait
-ssh -n "$remote" "sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+ssh -n "$remote" "curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.24/deb/Release.key | sudo gpg --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg"
+# ssh -n "$remote" "sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg"
 wait
-ssh -n "$remote" 'echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list'
+ssh -n "$remote" 'echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.24/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list'
 wait
-ssh -n "$remote" "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y kubectl=$kubectl_version"
+ssh -n "$remote" "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y --allow-change-held-packages kubectl=${kubectl_version}.\*"
 wait
 ssh -n "$remote" "sudo apt-mark hold kubectl"
 wait
@@ -89,6 +95,7 @@ ssh -n "$remote" "kubectl version --client"
 
 # Send ssh-key to remote cluster
 ssh -n "$remote" "ssh-keygen -t rsa -f /tmp/sshkey -q -N '' <<< $'\ny' >/dev/null 2>&1"
+ssh -n "$remote" "cp /tmp/sshkey .ssh/id_rsa"
 pubkey=$(ssh -n "$remote" "cat /tmp/sshkey.pub")
 pssh -i -h $ips "echo $pubkey >> /users/stvdp/.ssh/authorized_keys"
 

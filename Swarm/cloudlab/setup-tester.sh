@@ -66,7 +66,8 @@ ssh -n $remote "pip install --no-input asyncio aiohttp"
 ssh -n $remote "sudo luarocks install luasocket"
 
 # Download the repo
-ssh -n $remote "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
+# ssh -n $remote "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
+ssh -n $remote "git clone https://github.com/Stvdputten/DeathStarBench"
 
 #  Check if wrk is exists
 ssh -n $remote "cd DeathStarBench/socialNetwork/wrk2 && make clean && make" > /dev/null 2>&1

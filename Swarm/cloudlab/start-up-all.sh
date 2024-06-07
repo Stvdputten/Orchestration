@@ -19,3 +19,6 @@ ssh-add ~/.ssh/id_rsa
 # Settings up the tester
 ./setup-tester.sh
 # ./setup-testers.sh
+
+echo "Run the setup-experiments.sh next from the cloudlab dir"
+echo "Example: cd experiment && ./12_experiment_baseline_stress.sh"

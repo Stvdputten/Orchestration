@@ -17,62 +17,76 @@ export availability=0
 export unlimited=1
 export horizontal=0
 export vertical=1
+export N=5
 
 # Ensure not earlier deployments exists
-clean_up(){
-	ssh $manager "nomad job stop -purge media-microservices" > /dev/null
-	ssh $manager "nomad job stop -purge hotel-reservation" > /dev/null
-	ssh $manager "nomad job stop -purge social-network" > /dev/null
+clean_up() {
+	ssh $manager "nomad job stop -purge media-microservices" >/dev/null
+	ssh $manager "nomad job stop -purge hotel-reservation" >/dev/null
+	ssh $manager "nomad job stop -purge social-network" >/dev/null
 }
 
+clean_up
+
+# for ((i = 1; i <= N; i++)); do
+
+# 	sleep 5
+
+# 	unset benchmark
+# 	for benchmark in socialNetwork; do
+# 		echo "Running the baseline tests stress $experiment for $benchmark"
+# 		export benchmark=$benchmark
+# 		for requests in 500 1000 2000 3000 4000 6000 10000; do
+# 			for connections in 512; do
+# 				for threads in 8; do
+# 					./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests -N $i
+# 				done
+# 			done
+# 		done
+# 	done
+# done
+
 # clean_up
-sleep 5
 
-# unset benchmark
-# for benchmark in socialNetwork; do
-# 	echo "Running the baseline tests stress $experiment for $benchmark"
-# 	export benchmark=$benchmark
-# 	for requests in 500 1500 2000 3000 4000 5000 10000 15000 20000; do
-# 		for connections in 512; do
-# 			for threads in 4; do
-# 				./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests
+# for ((i = 1; i <= N; i++)); do
+# 	sleep 5
+
+# 	unset benchmark
+# 	for benchmark in mediaMicroservices; do
+# 		echo "Running the baseline tests stress $experiment for $benchmark"
+# 		export benchmark=$benchmark
+# 		for requests in 500 1000 1500 2000 3000 4000 5000; do
+# 			for connections in 512; do
+# 				for threads in 8; do
+# 					./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests -N $i
+# 				done
 # 			done
 # 		done
 # 	done
 # done
 
-# sleep 5	
+clean_up
 
-# unset benchmark
-# for benchmark in mediaMicroservices; do
-# 	echo "Running the baseline tests stress $experiment for $benchmark"
-# 	export benchmark=$benchmark
-# 	for requests in 10000; do
-# 	# for requests in 500 1000 2000 3000 4000 5000 6000 7000; do
-# 		for connections in 512; do
-# 			for threads in 4; do
-# 				./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests
-# 			done
-# 		done
-# 	done
-# done
+for ((i = 1; i <= N; i++)); do
+	sleep 5
 
-# sleep 5
-
-unset benchmark
-for benchmark in hotelReservation; do
-	echo "Running the baseline tests stress $experiment for $benchmark"
-	export benchmark=$benchmark
-	# for requests in 500 3000 4000 6000 10000 12000 14000 16000 18000 20000; do
-	for requests in 500 25000 30000; do
-		for connections in 512; do
-			for threads in 4; do
-				./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests
+	unset benchmark
+	for benchmark in hotelReservation; do
+		echo "Running the baseline tests stress $experiment for $benchmark"
+		export benchmark=$benchmark
+		for requests in 500 1000 2000 3000 4000 6000 10000; do
+			for requests in 500 25000 30000; do
+				for connections in 512; do
+					for threads in 8; do
+						./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests -N $i
+					done
+				done
 			done
 		done
 	done
 done
 
+clean_up
 
 echo "Experiment $experiment has been run and is done!"
 

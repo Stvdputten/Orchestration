@@ -1,8 +1,6 @@
-SERVER_1_IP=stvdp@amd128.utah.cloudlab.us
-SERVER_2_IP=stvdp@amd168.utah.cloudlab.us
-SERVER_3_IP=stvdp@amd137.utah.cloudlab.us
-AGENT_1_IP=stvdp@amd159.utah.cloudlab.us
-AGENT_2_IP=stvdp@amd133.utah.cloudlab.us
-AGENT_3_IP=stvdp@amd126.utah.cloudlab.us
-AGENT_4_IP=stvdp@amd125.utah.cloudlab.us
-AGENT_5_IP=stvdp@amd160.utah.cloudlab.us
+SERVER_1_IP=stvdp@amd148.utah.cloudlab.us
+AGENT_1=stvdp@amd151.utah.cloudlab.us
+AGENT_2=stvdp@amd127.utah.cloudlab.us
+AGENT_3=stvdp@amd146.utah.cloudlab.us
+AGENT_4=stvdp@amd157.utah.cloudlab.us
+AGENT_5=stvdp@amd168.utah.cloudlab.us

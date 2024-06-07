@@ -1,0 +1,79 @@
+No argument supplied nginx
+using  args: threads=8 and connections=512 and duration=30 and requests=500
+Running 30s test @ http://localhost:5000
+  8 threads and 512 connections
+  Thread calibration: mean lat.: 3.649ms, rate sampling interval: 10ms
+  Thread calibration: mean lat.: 529.125ms, rate sampling interval: 16ms
+  Thread calibration: mean lat.: 3.294ms, rate sampling interval: 10ms
+  Thread calibration: mean lat.: 496.678ms, rate sampling interval: 50ms
+  Thread calibration: mean lat.: 3.363ms, rate sampling interval: 10ms
+  Thread calibration: mean lat.: 149.039ms, rate sampling interval: 14ms
+  Thread calibration: mean lat.: 130.718ms, rate sampling interval: 10ms
+  Thread calibration: mean lat.: 170.022ms, rate sampling interval: 11ms
+  Thread Stats   Avg      Stdev     99%   +/- Stdev
+    Latency    12.63s     9.17s   26.79s    51.30%
+    Req/Sec     1.73     20.69    66.00     98.88%
+  Latency Distribution (HdrHistogram - Recorded Latency)
+ 50.000%   14.32s 
+ 75.000%   20.19s 
+ 90.000%   24.41s 
+ 99.000%   26.79s 
+ 99.900%   27.53s 
+ 99.990%   27.53s 
+ 99.999%   27.53s 
+100.000%   27.53s 
+
+  Detailed Percentile spectrum:
+       Value   Percentile   TotalCount 1/(1-Percentile)
+
+       2.405     0.000000            1         1.00
+       3.419     0.100000           27         1.11
+       4.335     0.200000           54         1.25
+    6684.671     0.300000           81         1.43
+   11411.455     0.400000          108         1.67
+   14319.615     0.500000          135         2.00
+   15671.295     0.550000          148         2.22
+   16572.415     0.600000          162         2.50
+   18071.551     0.650000          175         2.86
+   19103.743     0.700000          189         3.33
+   20185.087     0.750000          202         4.00
+   21168.127     0.775000          209         4.44
+   21938.175     0.800000          216         5.00
+   22527.999     0.825000          222         5.71
+   23625.727     0.850000          229         6.67
+   24100.863     0.875000          236         8.00
+   24281.087     0.887500          240         8.89
+   24461.311     0.900000          243        10.00
+   24510.463     0.912500          246        11.43
+   24641.535     0.925000          249        13.33
+   24788.991     0.937500          253        16.00
+   24821.759     0.943750          254        17.78
+   25034.751     0.950000          256        20.00
+   25329.663     0.956250          258        22.86
+   25378.815     0.962500          259        26.67
+   25706.495     0.968750          261        32.00
+   26001.407     0.971875          262        35.56
+   26132.479     0.975000          263        40.00
+   26312.703     0.978125          264        45.71
+   26312.703     0.981250          264        53.33
+   26640.383     0.984375          265        64.00
+   26787.839     0.985938          266        71.11
+   26787.839     0.987500          266        80.00
+   26836.991     0.989062          267        91.43
+   26836.991     0.990625          267       106.67
+   26836.991     0.992188          267       128.00
+   27049.983     0.992969          268       142.22
+   27049.983     0.993750          268       160.00
+   27049.983     0.994531          268       182.86
+   27049.983     0.995313          268       213.33
+   27049.983     0.996094          268       256.00
+   27525.119     0.996484          269       284.44
+   27525.119     1.000000          269          inf
+#[Mean    =    12630.751, StdDeviation   =     9169.873]
+#[Max     =    27508.736, Total count    =          269]
+#[Buckets =           27, SubBuckets     =         2048]
+----------------------------------------------------------
+  1431 requests in 30.07s, 603.09KB read
+  Socket errors: connect 0, read 0, write 0, timeout 1115
+Requests/sec:     47.59
+Transfer/sec:     20.06KB

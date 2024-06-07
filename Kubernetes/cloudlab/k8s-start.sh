@@ -35,7 +35,10 @@ workers=(${!WORKER_@})
 echo $ip_manager
 echo $ip_manager_int
 
+
+
 # SETUP first control plane node
+# TODO what happens if cfirst configs/logs fails? Rest of the script will fail? -> how to solve
 # ssh $manager "sudo kubeadm init --control-plane-endpoint='$ip_manager_int' --apiserver-advertise-address='$ip_manager_int' --upload-certs --apiserver-cert-extra-sans='$ip_manager_int' --pod-network-cidr=10.244.0.0/16" > configs/logs.txt
 ssh $manager "sudo kubeadm init --control-plane-endpoint='$ip_manager' --apiserver-advertise-address='$ip_manager' --upload-certs --apiserver-cert-extra-sans='$ip_manager' --pod-network-cidr=10.244.0.0/16" > configs/logs.txt
 sleep 10
@@ -77,6 +80,7 @@ if [ $availability -eq 0 ]; then
         ssh -n "${!worker}" "sudo $join" 
         sleep 2
     done
+
 elif [ $availability -eq 1 ]; then
     echo "Setup worker nodes"
     for worker in ${workers[@]}

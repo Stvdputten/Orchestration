@@ -1,23 +1,25 @@
 #!/usr/bin/env bash
 
 # Read the parameters if any
-while getopts t:c:d:R: flag
+while getopts t:c:d:R:N: flag
 do
     case "${flag}" in
         t) t=${OPTARG};;
         c) c=${OPTARG};;
         d) d=${OPTARG};;
         R) R=${OPTARG};;
+	N) N=${OPTARG};;
     esac
 done
 
-if [ -z "$t" ] && [ -z "$c" ] && [ -z "$d" ] && [ -z "$R" ]; then
+if [ -z "$t" ] && [ -z "$c" ] && [ -z "$d" ] && [ -z "$R" ] ; then
 	t=8
 	c=512
 	d=30
 	R=500
+	N=1
 	echo "-------------------------------------------------------";
-	echo "No params, using default settings of -t $t -c $c -d $d -R $R";
+	echo "No params, using default settings of -t $t -c $c -d $d -R $R -N $N";
 else
 	echo "-------------------------------------------------------";
 	echo "Experiments are run using the following parameters:";
@@ -25,6 +27,7 @@ else
 	echo "Connections: $c";
 	echo "Duration (seconds): $d";
 	echo "Req/sec: $R";
+	echo "Run number: $N";
 fi
 
 # Experiment parameters
@@ -99,11 +102,11 @@ fi
 
 # setup directories based on date for the experiments
 dir_date=$(date "+%d-%m-%y")
-dir_date="/$dir_date/$experiment"
+dir_date="/$dir_date/$experiment/$benchmark/$N"
 mkdir -p ./results/$dir_date
 
 # file params to output
-output_name=$server_type-exp$experiment-havail$availability-hori$horizontal-verti$vertical-infi$unlimited-client$clients-t$t-c$c-d$d-R$R
+output_name=$server_type-exp$experiment-havail$availability-hori$horizontal-verti$vertical-infi$unlimited-client$clients-t$t-c$c-d$d-R$R-N$N
 
 # return ip manager and network device
 # device=$(ssh $manager "ip link show | grep 'ens1f0' | awk '{ print \$2}' | head -n 1 | cut -d: -f1")
@@ -143,11 +146,11 @@ run_benchmark(){
 			while [ $? -ne 1 ]; do
 				echo "waiting for swarm services to be ready"
 				count=$((count+1))
-				sleep 5
+				sleep 20
 				if [ $count -gt 10 ]; then
 					echo "Swarm services are not ready"
 					ssh -n $manager "docker stack rm $bench_name"
-					sleep 5
+					sleep 10
 					pssh -i -h $ips "sudo systemctl restart docker"
 					if [ $unlimited -eq 1 ]; then 
 						if [ $vertical -eq 0 ]; then 
@@ -223,11 +226,11 @@ run_benchmark(){
 			while [ $? -ne 1 ]; do
 				echo "waiting for swarm services to be ready"
 				count=$((count+1))
-				sleep 5
+				sleep 20
 				if [ $count -gt 10 ]; then
 					echo "Swarm services are not ready"
 					ssh -n $manager "docker stack rm $bench_name"
-					sleep 5
+					sleep 10
 					pssh -i -h $ips "sudo systemctl restart docker"
 					if [ $unlimited -eq 1 ]; then 
 						if [ $vertical -eq 0 ]; then 
@@ -318,11 +321,11 @@ run_benchmark(){
 			while [ $? -ne 1 ]; do
 				echo "waiting for swarm services to be ready"
 				count=$((count+1))
-				sleep 5
+				sleep 10
 				if [ $count -gt 10 ]; then
 					echo "Swarm services are not ready"
 					ssh -n $manager "docker stack rm $bench_name"
-					sleep 5
+					sleep 10
 					pssh -i -h $ips "sudo systemctl restart docker"
 					if [ $unlimited -eq 1 ]; then 
 						if [ $vertical -eq 0 ]; then 
@@ -347,7 +350,7 @@ run_benchmark(){
 
 			# Load the dataset 
 			echo "socialNetwork loading the dataset..."
-			sleep 5
+			sleep 10
 
 			if [ $horizontal -eq 0 ]; then
 				echo "socialNetwork loading the dataset loop..."

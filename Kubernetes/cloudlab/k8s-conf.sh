@@ -11,13 +11,17 @@ if [ -z "$ips" ]; then
   export ips=$ips
 fi
 
+# 30/5/2024 support dropped before 1.23 so version update to 1.24
+
+# kubeadm_version="1.24"
 echo "Kubernetes configuration is starting."
-kubeadm_version="1.23.1-00"
+kubeadm_version="1.24"
 export kubeadm_version=$kubeadm_version
-kubelet_version="1.23.1-00"
+kubelet_version="1.24"
 export kubelet_version=$kubelet_version
-kubectl_version="1.23.1-00"
+kubectl_version="1.24"
 export kubectl_version=$kubectl_version
+
 pssh -i -h $ips 'sudo chsh -s /bin/bash $USER'
 
 
@@ -53,7 +57,7 @@ ips="configs/ips"
 
 # # install kubeadm/kubelet/kubectl
 # https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-other-package-management
-pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common"
+pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gpg gnupg-agent software-properties-common"
 # # check
 pssh -i -h $ips "kubectl version --client && kubeadm version"
 while [ $? -ne 0 ]; do
@@ -62,18 +66,32 @@ while [ $? -ne 0 ]; do
     if  ! pssh -i -h $ips "test -f /etc/apt/sources.list.d/kubernetes.list"; then
         pssh -i -h $ips "sudo rm /etc/apt/sources.list.d/kubernetes.list"
     fi
+
     wait
-    pssh -i -h $ips "sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+
+    pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common"
+
+    wait 
+    # pssh -i -h $ips "sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+    pssh -i -h $ips "curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.24/deb/Release.key | sudo gpg --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg"
+
     wait
-    pssh -i -h $ips 'echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list'
+    # pssh -i -h $ips 'echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list'
+    # TODO make it possible to chance versions
+    pssh -i -h $ips 'echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.24/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list'
+
 
     # pssh -i -h $ips "sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg"
     # wait
     # pssh -i -h $ips "echo 'deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main' | sudo tee /etc/apt/sources.list.d/kubernetes.list"
     # wait
-    pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y kubelet=$kubelet_version kubeadm=$kubeadm_version kubectl=$kubectl_version"
+    pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y --allow-change-held-packages kubelet=$kubelet_version.\* kubeadm=$kubeadm_version.\* kubectl=$kubectl_version.\*"
     wait
+
+    # watch out this might block reruns!
     pssh -i -h $ips "sudo apt-mark hold kubelet kubeadm kubectl"
+    wait
+    pssh -i -h $ips "sudo systemctl enable --now kubelet"
     wait
     pssh -i -h $ips "kubectl version --client && kubeadm version"
 done
@@ -112,5 +130,11 @@ pssh -i -h $ips "sudo sysctl --system"
 # SHELL_REMOTE=bash
 # source <(kubectl completion $SHELL_REMOTE)  # setup autocomplete in zsh into the current shell
 # echo "[[ $commands[kubectl] ]] && source <(kubectl completion $SHELL_REMOTE)" >> ~/.zshrc # add autocomplete permanently to your zsh shell
+
+# Ensure containers is setup properly
+# https://forum.linuxfoundation.org/discussion/862825/kubeadm-init-error-cri-v1-runtime-api-is-not-implemented
+pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo apt remove containerd && sudo apt update && sudo apt install -y containerd.io"
+pssh -i -h $ips "yes | sudo rm /etc/containerd/config.toml"
+pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo systemctl restart containerd"
 
 echo "Kubernetes configured."
