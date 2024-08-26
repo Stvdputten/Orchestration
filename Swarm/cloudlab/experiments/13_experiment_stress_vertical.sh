@@ -49,40 +49,40 @@ for ((i = 1; i <= N; i++)); do
         done
 done
 
-for ((i = 1; i <= N; i++)); do
-        sleep 5
+# for ((i = 1; i <= N; i++)); do
+#         sleep 5
 
-        unset benchmark
-        for benchmark in mediaMicroservices; do
-                echo "running the baseline tests stress $experiment for $benchmark"
-                export benchmark=$benchmark
-                for requests in 500 1000 1500 2000 3000 4000 5000; do
-                        for connections in 512; do
-                                for threads in 8; do
-                                        ./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests -N $i
-                                done
-                        done
-                done
-        done
-done
+#         unset benchmark
+#         for benchmark in mediaMicroservices; do
+#                 echo "running the baseline tests stress $experiment for $benchmark"
+#                 export benchmark=$benchmark
+#                 for requests in 500 1000 1500 2000 3000 4000 5000; do
+#                         for connections in 512; do
+#                                 for threads in 8; do
+#                                         ./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests -N $i
+#                                 done
+#                         done
+#                 done
+#         done
+# done
 
-for ((i = 1; i <= N; i++)); do
+# for ((i = 1; i <= N; i++)); do
 
-        sleep 5
+#         sleep 5
 
-        unset benchmark
-        for benchmark in hotelReservation; do
-                echo "Running the baseline tests stress $experiment for $benchmark"
-                export benchmark=$benchmark
-                for requests in 500 1000 2000 3000 4000 6000 10000; do
-                        for connections in 512; do
-                                for threads in 8; do
-                                        ./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests -N $i
-                                done
-                        done
-                done
-        done
-done
+#         unset benchmark
+#         for benchmark in hotelReservation; do
+#                 echo "Running the baseline tests stress $experiment for $benchmark"
+#                 export benchmark=$benchmark
+#                 for requests in 500 1000 2000 3000 4000 6000 10000; do
+#                         for connections in 512; do
+#                                 for threads in 8; do
+#                                         ./setup-experiments.sh -t $threads -c $connections -d 30 -R $requests -N $i
+#                                 done
+#                         done
+#                 done
+#         done
+# done
 
 clean_up
 

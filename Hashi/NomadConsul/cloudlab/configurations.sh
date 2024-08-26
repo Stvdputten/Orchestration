@@ -95,7 +95,6 @@ pssh -i -h $ips "echo 1 | sudo tee /proc/sys/net/bridge/bridge-nf-call-iptables"
 # sudo systemctl stop systemd-resolved
 
 # Download the repo
-# pssh -i -h $ips "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
 pssh -i -h $ips "git clone https://github.com/Stvdputten/DeathStarBench"
 
 # Setup packages required to load datasets or use wrk2 etc

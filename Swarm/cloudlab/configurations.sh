@@ -25,19 +25,25 @@ while [ $? -ne 0 ]; do
 done
 
 # Install docker
-pssh -i -h $ips "curl -fsSL https://get.docker.com -o get-docker.sh"
-pssh -i -h $ips "test -f 'get-docker.sh'"
-while [ ! $? -eq  0 ]; do
-  pssh -i -h $ips "curl -fsSL https://get.docker.com -o get-docker.sh"
-  pssh -i -h $ips "test -f 'get-docker.sh'"
-done
-pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop" > /dev/null 2>&1
+pssh -i -h $ips "sudo apt-get remove docker docker-engine docker.io containerd runc && sudo apt-get update "
+pssh -i -h $ips "sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg  --yes --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg"
+pssh -i -h $ips "echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu focal stable' | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null"
+pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y docker-ce=5:20.10.24~3-0~ubuntu-focal docker-ce-cli=5:20.10.24~3-0~ubuntu-focal containerd.io"
 
-# Configure Docker to run as the user
+pssh -i -h $ips "sudo docker --version"
+while [ ! $? -eq  0 ]; do
+  pssh -i -h $ips "sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg  --yes --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg"
+  pssh -i -h $ips "echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu focal stable' | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null"
+  pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y docker-ce=5:20.10.24~3-0~ubuntu-focal docker-ce-cli=5:20.10.24~3-0~ubuntu-focal containerd.io"
+  pssh -i -h $ips "sudo docker --version"
+done
+# pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop" > /dev/null 2>&1
+
+# # Configure Docker to run as the user
 pssh -i -h $ips "docker --version"
 while [ $? -ne  0 ]; do
   echo "Waiting for docker to be installed"
-  pssh -i -h $ips "VERSION=$docker_version && sudo sh get-docker.sh" > /dev/null 2>&1
+  # pssh -i -h $ips "VERSION=$docker_version && sudo sh get-docker.sh" > /dev/null 2>&1
   pssh -i -h $ips 'sudo usermod -aG docker $USER'
   pssh -i -h $ips "docker --version"
 done
@@ -65,7 +71,7 @@ pssh -i -h $ips "sudo systemctl daemon-reload"
 pssh -i -h $ips "sudo systemctl restart docker"
 
 # Have the directories for DSB
-pssh -i -h $ips "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
+pssh -i -h $ips "git clone https://github.com/Stvdputten/DeathStarBench"
 
 # Setup packages required to load datasets or use wrk2 etc
 # sometimes the packages are not installed, so we try to install them again?

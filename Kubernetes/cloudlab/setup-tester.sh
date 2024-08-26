@@ -65,7 +65,6 @@ ssh -n $remote "pip install --no-input asyncio aiohttp"
 ssh -n $remote "sudo luarocks install luasocket"
 
 # Download the repo
-# ssh -n $remote "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
 ssh -n $remote "git clone https://github.com/Stvdputten/DeathStarBench"
 
 #  Check if wrk is exists
@@ -78,9 +77,6 @@ ssh -n $remote "cd DeathStarBench/hotelReservation/wrk2 && make clean && make"
 ssh -n "$remote" "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common"
 wait
 ssh -n "$remote" "sudo rm /etc/apt/sources.list.d/kubernetes.list" 
-
-#TODO add versions parameters
-ssh -n "$remote" "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common"
 wait
 ssh -n "$remote" "curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.24/deb/Release.key | sudo gpg --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg"
 # ssh -n "$remote" "sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg"
@@ -95,7 +91,6 @@ ssh -n "$remote" "kubectl version --client"
 
 # Send ssh-key to remote cluster
 ssh -n "$remote" "ssh-keygen -t rsa -f /tmp/sshkey -q -N '' <<< $'\ny' >/dev/null 2>&1"
-ssh -n "$remote" "cp /tmp/sshkey .ssh/id_rsa"
 pubkey=$(ssh -n "$remote" "cat /tmp/sshkey.pub")
 pssh -i -h $ips "echo $pubkey >> /users/stvdp/.ssh/authorized_keys"
 

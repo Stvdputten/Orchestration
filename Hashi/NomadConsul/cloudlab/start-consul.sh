@@ -88,6 +88,4 @@ for agent in ${agents[@]}; do
     # --advertise-addr '{{ GetInterfaceIP "eth0"}}'
 done
 
-echo "Setup Consul done"
-
 exit 0

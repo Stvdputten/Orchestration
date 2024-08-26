@@ -55,8 +55,8 @@ fi
 # pssh -i -h $ips "git clone https://github.com/Stvdputten/DeathStarBench"
 
 # update the DSB after updating the files
-pssh -i -h $ips "cd DeathStarBench && git pull && git reset --hard origin/local" > /dev/null 2>&1
-ssh -n $remote "cd DeathStarBench && git reset --hard origin/local && git pull" > /dev/null 2>&1
+# pssh -i -h $ips "cd DeathStarBench && git checkout -b ori && git reset --hard origin/master" > /dev/null 2>&1
+# ssh -n $remote "cd DeathStarBench && git reset --hard origin/master && git pull" > /dev/null 2>&1
 
 # check what type of server is used and set the correct path
 if echo $manager | cut -d@ -f2 | grep "amd" > /dev/null; then

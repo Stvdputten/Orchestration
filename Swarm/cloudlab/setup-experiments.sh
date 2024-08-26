@@ -35,12 +35,12 @@ fi
 # 0 means true
 # 1 means false
 if [ -z "$unlimited" ]; then
-	# resources are unlimited
-	export unlimited=0
+	# resources are limited
+	export unlimited=1
 fi
 
 if [ -z "$clients" ]; then
-	# resources are unlimited
+	# 
 	export clients=1
 fi
 
@@ -88,8 +88,8 @@ if [ $unlimited -eq 0 ]; then echo "UNLIMITED resources"; else echo "LIMITED res
 echo "-------------------------------------------------------";
 
 # update the DSB after updating the files
-pssh -i -h $ips "cd DeathStarBench && git pull && git reset --hard origin/local" > /dev/null 2>&1
-ssh -n $remote "cd DeathStarBench && git reset --hard origin/local && git pull" > /dev/null 2>&1
+pssh -i -h $ips "cd DeathStarBench && git pull && git reset --hard origin/master" > /dev/null 2>&1
+ssh -n $remote "cd DeathStarBench && git reset --hard origin/master && git pull" > /dev/null 2>&1
 
 # check what type of server is used and set the correct path
 if echo $manager | cut -d@ -f2 | grep "amd" > /dev/null; then

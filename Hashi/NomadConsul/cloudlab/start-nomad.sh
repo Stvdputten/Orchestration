@@ -79,7 +79,4 @@ ssh -n ${!agent} 'sudo systemctl restart nomad.service'
 done
 
 ssh -n $manager "curl -X POST -d '{\"MemoryOversubscriptionEnabled\": true}' localhost:4646/v1/operator/scheduler/configuration"
-
-echo "Setup Nomad done"
-
 exit 0

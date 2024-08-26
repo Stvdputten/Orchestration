@@ -1,0 +1,37 @@
+No argument supplied nginx
+using  args: threads=8 and connections=512 and duration=30 and requests=10000
+Running 30s test @ http://localhost:8080
+  8 threads and 512 connections
+  Thread calibration: mean lat.: 958.761ms, rate sampling interval: 3747ms
+  Thread calibration: mean lat.: 991.329ms, rate sampling interval: 3813ms
+  Thread calibration: mean lat.: 784.429ms, rate sampling interval: 2486ms
+  Thread calibration: mean lat.: 969.759ms, rate sampling interval: 3768ms
+  Thread calibration: mean lat.: 971.613ms, rate sampling interval: 3788ms
+  Thread calibration: mean lat.: 930.799ms, rate sampling interval: 3706ms
+  Thread calibration: mean lat.: 942.633ms, rate sampling interval: 3684ms
+  Thread calibration: mean lat.: 920.721ms, rate sampling interval: 3631ms
+  Thread Stats   Avg      Stdev     99%   +/- Stdev
+    Latency     -nanus    -nanus   0.00us    0.00%
+    Req/Sec     0.00      0.00     0.00    100.00%
+  Latency Distribution (HdrHistogram - Recorded Latency)
+ 50.000%    0.00us
+ 75.000%    0.00us
+ 90.000%    0.00us
+ 99.000%    0.00us
+ 99.900%    0.00us
+ 99.990%    0.00us
+ 99.999%    0.00us
+100.000%    0.00us
+
+  Detailed Percentile spectrum:
+       Value   Percentile   TotalCount 1/(1-Percentile)
+
+       0.000     1.000000            0          inf
+#[Mean    =         -nan, StdDeviation   =         -nan]
+#[Max     =        0.000, Total count    =            0]
+#[Buckets =           27, SubBuckets     =         2048]
+----------------------------------------------------------
+  3343 requests in 30.07s, 34.30MB read
+  Non-2xx or 3xx responses: 17
+Requests/sec:    111.18
+Transfer/sec:      1.14MB

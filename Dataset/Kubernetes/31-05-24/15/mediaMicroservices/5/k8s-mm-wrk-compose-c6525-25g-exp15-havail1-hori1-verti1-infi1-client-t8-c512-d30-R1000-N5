@@ -1,0 +1,89 @@
+No argument supplied nginx
+using  args: threads=8 and connections=512 and duration=30 and requests=1000
+Running 30s test @ http://localhost:8080/wrk2-api/user-timeline/read
+  8 threads and 512 connections
+  Thread calibration: mean lat.: 9999.701ms, rate sampling interval: 20004ms
+  Thread calibration: mean lat.: 9430.220ms, rate sampling interval: 20021ms
+  Thread calibration: mean lat.: 4761.408ms, rate sampling interval: 14344ms
+  Thread calibration: mean lat.: 10004.480ms, rate sampling interval: 20021ms
+  Thread calibration: mean lat.: 3040.256ms, rate sampling interval: 6082ms
+  Thread calibration: mean lat.: 10003.251ms, rate sampling interval: 20021ms
+  Thread calibration: mean lat.: 7340.501ms, rate sampling interval: 20004ms
+  Thread calibration: mean lat.: 9999.701ms, rate sampling interval: 20004ms
+  Thread Stats   Avg      Stdev     99%   +/- Stdev
+    Latency    15.27s     5.11s   23.20s    39.78%
+    Req/Sec     7.00      4.12    10.00     75.00%
+  Latency Distribution (HdrHistogram - Recorded Latency)
+ 50.000%   18.43s 
+ 75.000%   20.04s 
+ 90.000%   20.58s 
+ 99.000%   23.20s 
+ 99.900%   27.44s 
+ 99.990%   28.97s 
+ 99.999%   28.97s 
+100.000%   28.97s 
+
+  Detailed Percentile spectrum:
+       Value   Percentile   TotalCount 1/(1-Percentile)
+
+    7716.863     0.000000            1         1.00
+   10002.431     0.100000          331         1.11
+   10002.431     0.200000          331         1.25
+   10002.431     0.300000          331         1.43
+   10010.623     0.400000          477         1.67
+   18431.999     0.500000          504         2.00
+   19349.503     0.550000          559         2.22
+   19677.183     0.600000          609         2.50
+   19824.639     0.650000          658         2.86
+   19939.327     0.700000          708         3.33
+   20037.631     0.750000          762         4.00
+   20103.167     0.775000          789         4.44
+   20168.703     0.800000          815         5.00
+   20234.239     0.825000          838         5.71
+   20299.775     0.850000          859         6.67
+   20430.847     0.875000          883         8.00
+   20512.767     0.887500          897         8.89
+   20578.303     0.900000          912        10.00
+   20627.455     0.912500          920        11.43
+   20742.143     0.925000          933        13.33
+   20889.599     0.937500          945        16.00
+   20955.135     0.943750          954        17.78
+   21020.671     0.950000          958        20.00
+   21151.743     0.956250          965        22.86
+   21299.199     0.962500          972        26.67
+   21364.735     0.968750          978        32.00
+   21512.191     0.971875          981        35.56
+   21643.263     0.975000          983        40.00
+   21692.415     0.978125          986        45.71
+   21954.559     0.981250          990        53.33
+   22495.231     0.984375          993        64.00
+   22544.383     0.985938          994        71.11
+   22659.071     0.987500          996        80.00
+   23019.519     0.989062          997        91.43
+   23347.199     0.990625          999       106.67
+   24788.991     0.992188         1001       128.00
+   24788.991     0.992969         1001       142.22
+   25214.975     0.993750         1002       160.00
+   26853.375     0.994531         1004       182.86
+   26853.375     0.995313         1004       213.33
+   27246.591     0.996094         1005       256.00
+   27246.591     0.996484         1005       284.44
+   27246.591     0.996875         1005       320.00
+   27394.047     0.997266         1006       365.71
+   27394.047     0.997656         1006       426.67
+   27443.199     0.998047         1007       512.00
+   27443.199     0.998242         1007       568.89
+   27443.199     0.998437         1007       640.00
+   27443.199     0.998633         1007       731.43
+   27443.199     0.998828         1007       853.33
+   28966.911     0.999023         1008      1024.00
+   28966.911     1.000000         1008          inf
+#[Mean    =    15272.718, StdDeviation   =     5113.832]
+#[Max     =    28950.528, Total count    =         1008]
+#[Buckets =           27, SubBuckets     =         2048]
+----------------------------------------------------------
+  1045 requests in 30.07s, 364.32KB read
+  Socket errors: connect 0, read 0, write 0, timeout 162
+  Non-2xx or 3xx responses: 1045
+Requests/sec:     34.76
+Transfer/sec:     12.12KB

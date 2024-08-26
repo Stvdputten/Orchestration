@@ -1,2 +1,0 @@
-No argument supplied nginx
-using  args: threads=8 and connections=512 and duration=30 and requests=500

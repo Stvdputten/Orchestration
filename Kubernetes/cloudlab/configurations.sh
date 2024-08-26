@@ -34,10 +34,11 @@ done
 pssh -i -h $ips "sudo apt-get update && sudo apt-get install -y vim git vim apt-transport-https ca-certificates curl gnupg-agent software-properties-common htop" > /dev/null 2>&1
 
 # Configure Docker to run as the user
+pssh -i -h $ips 'sudo usermod -aG docker $USER'
 pssh -i -h $ips "docker --version"
 while [ $? -ne  0 ]; do
   echo "Waiting for docker to be installed"
-  pssh -i -h $ips "VERSION=$docker_version && sudo sh get-docker.sh" > /dev/null 2>&1
+  # pssh -i -h $ips "VERSION=$docker_version && sudo sh get-docker.sh" > /dev/null 2>&1
   pssh -i -h $ips 'sudo usermod -aG docker $USER'
   pssh -i -h $ips "docker --version"
 done
@@ -74,7 +75,7 @@ pssh -i -h $ips "sudo systemctl daemon-reload"
 pssh -i -h $ips "sudo systemctl restart docker"
 
 # Have the directories for DSB
-pssh -i -h $ips "git clone --single-branch --branch local https://github.com/Stvdputten/DeathStarBench"
+pssh -i -h $ips "git clone https://github.com/Stvdputten/DeathStarBench"
 
 # Setup packages required to load datasets or use wrk2 etc
 # sometimes the packages are not installed, so we try to install them again?

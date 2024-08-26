@@ -11,9 +11,6 @@ if [ -z "$ips" ]; then
   export ips=$ips
 fi
 
-# 30/5/2024 support dropped before 1.23 so version update to 1.24
-
-# kubeadm_version="1.24"
 echo "Kubernetes configuration is starting."
 kubeadm_version="1.24"
 export kubeadm_version=$kubeadm_version
@@ -21,7 +18,6 @@ kubelet_version="1.24"
 export kubelet_version=$kubelet_version
 kubectl_version="1.24"
 export kubectl_version=$kubectl_version
-
 pssh -i -h $ips 'sudo chsh -s /bin/bash $USER'
 
 
@@ -66,7 +62,6 @@ while [ $? -ne 0 ]; do
     if  ! pssh -i -h $ips "test -f /etc/apt/sources.list.d/kubernetes.list"; then
         pssh -i -h $ips "sudo rm /etc/apt/sources.list.d/kubernetes.list"
     fi
-
     wait
 
     pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common"
@@ -87,11 +82,7 @@ while [ $? -ne 0 ]; do
     # wait
     pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y --allow-change-held-packages kubelet=$kubelet_version.\* kubeadm=$kubeadm_version.\* kubectl=$kubectl_version.\*"
     wait
-
-    # watch out this might block reruns!
     pssh -i -h $ips "sudo apt-mark hold kubelet kubeadm kubectl"
-    wait
-    pssh -i -h $ips "sudo systemctl enable --now kubelet"
     wait
     pssh -i -h $ips "kubectl version --client && kubeadm version"
 done
@@ -130,11 +121,5 @@ pssh -i -h $ips "sudo sysctl --system"
 # SHELL_REMOTE=bash
 # source <(kubectl completion $SHELL_REMOTE)  # setup autocomplete in zsh into the current shell
 # echo "[[ $commands[kubectl] ]] && source <(kubectl completion $SHELL_REMOTE)" >> ~/.zshrc # add autocomplete permanently to your zsh shell
-
-# Ensure containers is setup properly
-# https://forum.linuxfoundation.org/discussion/862825/kubeadm-init-error-cri-v1-runtime-api-is-not-implemented
-pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo apt remove containerd && sudo apt update && sudo apt install -y containerd.io"
-pssh -i -h $ips "yes | sudo rm /etc/containerd/config.toml"
-pssh -i -h $ips "DEBIAN_FRONTEND=noninteractive && sudo systemctl restart containerd"
 
 echo "Kubernetes configured."

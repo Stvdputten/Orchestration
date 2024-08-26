@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
 # Read the parameters if any
-while getopts t:c:d:R:N: flag; do
-	case "${flag}" in
-	t) t=${OPTARG} ;;
-	c) c=${OPTARG} ;;
-	d) d=${OPTARG} ;;
-	R) R=${OPTARG} ;;
-	N) N=${OPTARG} ;;
-	esac
+while getopts t:c:d:R:N: flag
+do
+    case "${flag}" in
+        t) t=${OPTARG};;
+        c) c=${OPTARG};;
+        d) d=${OPTARG};;
+        R) R=${OPTARG};;
+	N) N=${OPTARG};;
+    esac
 done
 
 if [ -z "$t" ] && [ -z "$c" ] && [ -z "$d" ] && [ -z "$R" ]; then
@@ -17,15 +18,16 @@ if [ -z "$t" ] && [ -z "$c" ] && [ -z "$d" ] && [ -z "$R" ]; then
 	d=30
 	R=500
 	N=1
-	echo "-------------------------------------------------------"
-	echo "No params, using default settings of -t $t -c $c -d $d -R $R -N $N"
+	echo "-------------------------------------------------------";
+	echo "No params, using default settings of -t $t -c $c -d $d -R $R -N $N";
 else
-	echo "-------------------------------------------------------"
-	echo "Experiments are run using the following parameters:"
-	echo "Threads: $t"
-	echo "Connections: $c"
-	echo "Duration (seconds): $d"
-	echo "Req/sec: $R"
+	echo "-------------------------------------------------------";
+	echo "Experiments are run using the following parameters:";
+	echo "Threads: $t";
+	echo "Connections: $c";
+	echo "Duration (seconds): $d";
+	echo "Req/sec: $R";
+	echo "Run number: $N";
 fi
 
 # Experiment parameters
@@ -52,13 +54,14 @@ if [ -z "$horizontal" ]; then
 	export horizontal=1
 fi
 
+
 # This part checks the nodes params
 if [ -z "$ips" ]; then
 	ips="configs/ips"
 	export ips=$ips
 fi
 if [ -z "$manager" ]; then
-	manager=$(head -n 1 configs/ips)
+	manager=$(head -n 2 configs/ips)
 	export manager=$manager
 fi
 if [ -z "$remote" ]; then
@@ -70,24 +73,23 @@ if [ -z "$experiment" ]; then
 	export experiment=$experiment
 fi
 
-echo "Running experiment $experiment"
+echo "Running experiment $experiment";
 echo "Current benchmark is $benchmark"
 if [ $availability -eq 0 ]; then echo "Availability is on"; else echo "Availability is off"; fi
 if [ $horizontal -eq 0 ]; then echo "Horizontal is on"; else echo "Horizontal is off"; fi
 if [ $vertical -eq 0 ]; then echo "Vertical is on"; else echo "Vertical is off"; fi
 if [ $unlimited -eq 0 ]; then echo "UNLIMITED resources"; else echo "LIMITED resources"; fi
-echo "-------------------------------------------------------"
+echo "-------------------------------------------------------";
 
 # update the DSB after updating the files
 echo "Resetting the files"
-pssh -i -h $ips "cd DeathStarBench && git reset --hard" >/dev/null 2>&1
-pssh -i -h $ips "cd DeathStarBench && git pull && git reset --hard" >/dev/null 2>&1
-ssh -n $remote "cd DeathStarBench && git reset --hard && git pull" >/dev/null 2>&1
+pssh -i -h $ips "cd DeathStarBench && git pull && git reset --hard origin/main" > /dev/null 2>&1
+ssh -n $remote "cd DeathStarBench && git reset --hard origin/main && git pull" > /dev/null 2>&1
 
 # check what type of server is used and set the correct path
-if echo $manager | cut -d@ -f2 | grep "amd" >/dev/null; then
+if echo $manager | cut -d@ -f2 | grep "amd" > /dev/null; then
 	server_type="c6525-25g"
-elif echo $manager | cut -d@ -f2 | grep "ms" >/dev/null; then
+elif echo $manager | cut -d@ -f2 | grep "ms" > /dev/null; then
 	server_type="m510"
 fi
 
@@ -99,6 +101,7 @@ dir_date="/$dir_date/$experiment/$benchmark/$N"
 mkdir -p ./results/$dir_date
 
 # file params to output
+# output_name=$server_type-exp$experiment-havail$availability-hori$horizontal-verti$vertical-infi$unlimited-t$t-c$c-d$d-R$R
 output_name=$server_type-exp$experiment-havail$availability-hori$horizontal-verti$vertical-infi$unlimited-client$clients-t$t-c$c-d$d-R$R-N$N
 
 # return ip manager and network device
@@ -120,8 +123,8 @@ node3_ip=$(ssh -n $node3 "ip -4 a show $device |  grep \"inet\b\" | awk '{ print
 # setup dns
 # https://www.linuxuprising.com/2020/07/ubuntu-how-to-free-up-port-53-used-by.html
 # ssh $manager "sudo lsof -i :53"
-ssh $manager "sudo lsof -i :53" | grep "consul" >/dev/null
-if [ $? -ne 0 ]; then
+ssh $manager "sudo lsof -i :53" | grep "consul" > /dev/null
+if [  $? -ne 0 ]; then
 	echo "Setup dns resolver"
 	ssh $manager "echo 'DNS=8.8.8.8' | sudo tee -a /etc/systemd/resolved.conf && echo 'DNSStubListener=no' | sudo tee -a /etc/systemd/resolved.conf"
 	ssh $manager "sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf"
@@ -133,14 +136,14 @@ if [ $? -ne 0 ]; then
 	ssh $manager "sudo systemctl restart consul.service"
 fi
 
-run_benchmark() {
+run_benchmark(){
 	if [ $benchmark == "hotelReservation" ]; then
 		echo "Deploying hotelReservation app"
 		bench_name=hotel-reservation
 
 		# Make sure no other nomad job is running
-		ssh $manager "nomad job stop -purge social-network" >/dev/null
-		ssh $manager "nomad job stop -purge media-microservices" >/dev/null
+		ssh $manager "nomad job stop -purge social-network" > /dev/null
+		ssh $manager "nomad job stop -purge media-microservices" > /dev/null
 
 		# Use the correct deployment files
 		if [ $unlimited -eq 1 ]; then
@@ -161,17 +164,17 @@ run_benchmark() {
 		echo "Nomad job file is $nomad_job."
 
 		# Change variables in nomad file of the jaeger/dns/hostname
-		ssh $manager "cd DeathStarBench/hotelReservation/nomad && sed -e '3s/\".*\"/\"$node3_hostname\"/' -e '8s/\".*\"/\"$node3_ip\"/' -e '13s/\".*\"/\"$ip_manager\"/' $nomad_job | sudo tee $nomad_job" >/dev/null
+		ssh $manager "cd DeathStarBench/hotelReservation/nomad && sed -e '3s/\".*\"/\"$node3_hostname\"/' -e '8s/\".*\"/\"$node3_ip\"/' -e '13s/\".*\"/\"$ip_manager\"/' $nomad_job | sudo tee $nomad_job" > /dev/null
 
 		# Check if hotel-reservation is already deployed
-		ssh $manager "nomad status" | grep "$bench_name" >/dev/null
+		ssh $manager "nomad status" | grep "$bench_name" > /dev/null
 		if [ $? -ne 0 ]; then
 			# If the app is not deployed, deploy it
 
 			# setup dns resolver on node3
 			echo "Dns resolver setup on node3"
-			ssh $node3 "cat /etc/systemd/resolved.conf" | grep "8.8.8.8" >/dev/null
-			if [ $? -ne 0 ]; then
+			ssh $node3 "cat /etc/systemd/resolved.conf" | grep "8.8.8.8" > /dev/null
+			if [  $? -ne 0 ]; then
 				echo "Setup dns resolver"
 				ssh $node3 "echo 'DNS=8.8.8.8' | sudo tee -a /etc/systemd/resolved.conf && echo 'DNSStubListener=no' | sudo tee -a /etc/systemd/resolved.conf"
 				ssh $node3 "sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf"
@@ -197,7 +200,7 @@ run_benchmark() {
 		echo "The jaeger service is found on $node3, $nginx_ip"
 
 		echo "hotelReservation workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && export nginx_ip=$nginx_ip && ./workload.sh -t $t -c $c -d $d -R $R" >./results/$dir_date/nomad-hr-wrk-mixed-$output_name
+		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && export nginx_ip=$nginx_ip && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/nomad-hr-wrk-mixed-$output_name
 
 		echo "$benchmark results are in."
 		echo "hotelReservation iteration done."
@@ -211,7 +214,7 @@ run_benchmark() {
 		ssh $manager "nomad job stop -purge hotel-reservation"
 
 		# Check if hotel-reservation is already deployed
-		ssh $manager "nomad status" | grep "$bench_name" >/dev/null
+		ssh $manager "nomad status" | grep "$bench_name" > /dev/null
 		if [ $? -ne 0 ]; then
 			# If the app is not deployed, deploy it
 
@@ -233,8 +236,8 @@ run_benchmark() {
 			fi
 
 			# Change variables in nomad file of the jaeger/dns/hostname
-			ssh $manager "cd DeathStarBench/mediaMicroservices/nomad && sed -e '3s/\".*\"/\"$node3_hostname\"/' -e '8s/\".*\"/\"$node3_ip\"/' -e '13s/\".*\"/\"$ip_manager\"/' $nomad_job | sudo tee $nomad_job" >/dev/null 2>&1
-			pssh -i -h $ips "cd DeathStarBench/mediaMicroservices/nomad && sed '43s/\([0-9]\{1,3\}\.\)\{1,3\}[0-9]\{1,3\}/$ip_manager/' nginx.conf | sudo tee nginx.conf" >/dev/null 2>&1
+			ssh $manager "cd DeathStarBench/mediaMicroservices/nomad && sed -e '3s/\".*\"/\"$node3_hostname\"/' -e '8s/\".*\"/\"$node3_ip\"/' -e '13s/\".*\"/\"$ip_manager\"/' $nomad_job | sudo tee $nomad_job" > /dev/null 2>&1
+			pssh -i -h $ips "cd DeathStarBench/mediaMicroservices/nomad && sed '43s/\([0-9]\{1,3\}\.\)\{1,3\}[0-9]\{1,3\}/$ip_manager/' nginx.conf | sudo tee nginx.conf" > /dev/null 2>&1
 
 			# deploy media-microservices app
 			sleep 5
@@ -258,19 +261,19 @@ run_benchmark() {
 			# 	ssh $manager "line_n=$(nomad job status -evals media-microservices | awk '{ print $4}' | grep -n \"Healthy\" | cut -d: -f1) && line_n_end=$((line_n+13)) && nomad job status -evals media-microservices | awk '{ print \$4}' | sed -n \$line_n,\"\$line_n_end\"p" | grep 0
 			# done
 
-			# Load the dataset
+			# Load the dataset 
 			echo "Loading the dataset"
 			count=0
 			if [ $horizontal -eq 0 ]; then
 				while [ $count -ne 10 ]; do
 					echo "$count"
-					ssh $node3 "cd DeathStarBench/mediaMicroservices/scripts && python3 write_movie_info.py && ./register_movies.sh && ./register_users.sh" >/dev/null 2>&1
-					count=$((count + 1))
+					ssh $node3 "cd DeathStarBench/mediaMicroservices/scripts && python3 write_movie_info.py && ./register_movies.sh && ./register_users.sh" > /dev/null 2>&1
+					count=$((count+1))
 				done
 			elif [ $horizontal -eq 1 ]; then
-				ssh $node3 "cd DeathStarBench/mediaMicroservices/scripts && python3 write_movie_info.py && ./register_movies.sh && ./register_users.sh" >/dev/null 2>&1
-			fi
-			# ssh $node3 "cd DeathStarBench/mediaMicroservices/scripts && python3 write_movie_info.py && ./register_movies.sh && ./register_users.sh"
+				ssh $node3 "cd DeathStarBench/mediaMicroservices/scripts && python3 write_movie_info.py && ./register_movies.sh && ./register_users.sh" > /dev/null 2>&1
+		 	fi
+			# ssh $node3 "cd DeathStarBench/mediaMicroservices/scripts && python3 write_movie_info.py && ./register_movies.sh && ./register_users.sh" 
 			echo "mediaMicroservices app is ready to be experimented on."
 
 			echo "$benchmark app is ready to be experimented on."
@@ -287,7 +290,7 @@ run_benchmark() {
 		echo "The jaeger service is found on $nginx_ip"
 
 		echo "$benchmark workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && export nginx_ip=$nginx_ip && ./workload.sh -t $t -c $c -d $d -R $R" >./results/$dir_date/nomad-mm-wrk-compose-$output_name
+		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && export nginx_ip=$nginx_ip && ./workload.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/nomad-mm-wrk-compose-$output_name
 
 		# Stop the benchmark
 		# ssh $manager "cd DeathStarBench/mediaMicroservices/nomad && nomad job stop media-microservices"
@@ -303,7 +306,7 @@ run_benchmark() {
 		ssh $manager "nomad job stop -purge hotel-reservation"
 
 		# Check if social-network is already deployed
-		ssh $manager "nomad status" | grep "$bench_name" >/dev/null
+		ssh $manager "nomad status" | grep "$bench_name" > /dev/null
 		if [ $? -ne 0 ]; then
 			# If the app is not deployed, deploy it
 
@@ -326,8 +329,8 @@ run_benchmark() {
 
 			# Change the hostname
 			# Change variables in nomad file of the jaeger/dns/hostname
-			ssh $manager "cd DeathStarBench/socialNetwork/nomad && sed -e '3s/\".*\"/\"$node3_hostname\"/' -e '8s/\".*\"/\"$node3_ip\"/' -e '13s/\".*\"/\"$ip_manager\"/' $nomad_job | sudo tee $nomad_job" >/dev/null
-			pssh -i -h $ips "cd DeathStarBench/socialNetwork/nomad/nginx-web-server/conf && sed '45s/\([0-9]\{1,3\}\.\)\{1,3\}[0-9]\{1,3\}/$ip_manager/' nginx.conf | sudo tee nginx.conf" >/dev/null
+			ssh $manager "cd DeathStarBench/socialNetwork/nomad && sed -e '3s/\".*\"/\"$node3_hostname\"/' -e '8s/\".*\"/\"$node3_ip\"/' -e '13s/\".*\"/\"$ip_manager\"/' $nomad_job | sudo tee $nomad_job" > /dev/null
+			pssh -i -h $ips "cd DeathStarBench/socialNetwork/nomad/nginx-web-server/conf && sed '45s/\([0-9]\{1,3\}\.\)\{1,3\}[0-9]\{1,3\}/$ip_manager/' nginx.conf | sudo tee nginx.conf" > /dev/null
 
 			# deploy social-network app
 			echo "Deploying $bench_name"
@@ -350,7 +353,7 @@ run_benchmark() {
 			# 	ssh $manager 'line_n=$(nomad job status -evals social-network | awk "{ print $4}" | grep -n "Placed" | cut -d: -f1) && line_n_end=$((line_n+13)) && nomad job status -evals social-network | awk "{ print $4}" | sed -n $line_n,"$line_n_end"p' | grep 0
 			# done
 
-			# Load the dataset
+			# Load the dataset 
 			if [ $horizontal -eq 0 ]; then
 				ssh $node3 "cd DeathStarBench/socialNetwork/ && python3 scripts/init_social_graph.py" | grep Failed | wc -l
 				while [ $? -ne 0 ]; do
@@ -358,7 +361,7 @@ run_benchmark() {
 				done
 			elif [ $horizontal -eq 1 ]; then
 				ssh $node3 "cd DeathStarBench/socialNetwork/ && python3 scripts/init_social_graph.py"
-			fi
+		 	fi
 			echo "socialNetwork app is ready to be experimented on."
 		else
 			echo "Social-network already deployed"
@@ -373,7 +376,7 @@ run_benchmark() {
 		echo "The jaeger service is found on $nginx_ip"
 
 		echo "socialNetwork workloads are being run..."
-		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && export nginx_ip=$nginx_ip && ./workload-mixed.sh -t $t -c $c -d $d -R $R" >./results/$dir_date/nomad-sn-wrk-mixed-$output_name
+		ssh -n $remote "cd DeathStarBench/$benchmark/wrk2 && export nginx_ip=$nginx_ip && ./workload-mixed.sh -t $t -c $c -d $d -R $R" > ./results/$dir_date/nomad-sn-wrk-mixed-$output_name
 
 		echo "socialNetwork results are in."
 		echo "SocialNetwork experiment cleaned up."

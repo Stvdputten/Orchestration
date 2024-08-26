@@ -5,7 +5,7 @@ export ips="configs/ips"
 export manager=$(head -n 1 configs/ips)
 export remote=$(head -n 1 configs/remote)
 # availability=0 high availability mode, availability=1 low availability mode
-export availability=1
+export availability=0
 export unlimited=1
 
 # Setting up the ssh-agent
